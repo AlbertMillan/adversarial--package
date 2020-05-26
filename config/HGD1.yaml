@@ -1,0 +1,62 @@
+
+OPTIONS:
+    RAW: FALSE
+    ADV: TRUE
+
+HYPERPARAMETERS:
+    BATCH_SIZE: 64
+    PRINT_FREQ: 10
+
+DATASET:
+    NAME: 'CIFAR10'
+    TRAIN: FALSE
+    CLASSES: 10
+    DIR_PATH: 'datasets/'
+    NORMALIZE: FALSE
+    CROP: FALSE
+    
+ATTACK:
+    NAME: "PGD"
+    MAX_ITER: 4
+    MOMENTUM: 0
+    EPSILON:
+        TYPE: 'FIXED'
+        VALUE: 8
+    ALPHA:
+        NAME: 'CONSTANT'
+        DIVISOR: 4
+
+
+MODELS:
+    # Model used to generate adversarial examples (ATTACK model)
+    ADV_MODEL:
+        NAME: "WideResNet"
+        DEPTH: 28
+        WIDEN_FACTOR: 10
+        DROP_RATE: 0
+        PARALLEL: TRUE
+        PRETRAINED: TRUE
+        CHKPT_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
+    
+    # Model we are trying to fool
+    THREAT_MODEL:
+        NAME: "HGD"
+        TRAIN: FALSE
+        PARALLEL: FALSE
+        DENOISER_PATH: "chkpt/denoiser_pgd_alternate4/chkpt.pth.tar"
+        SAVE_DIR: null
+        TARGET:
+            NAME: "WideResNet"
+            DEPTH: 28
+            WIDEN_FACTOR: 10
+            DROP_RATE: 0
+            PARALLEL: TRUE
+            PRETRAINED: TRUE
+            CHKPT_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
+    
+    
+PATHS:
+    ADV_MODEL_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
+    THREAT_MODEL_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
+    DENOISER_PATH: "chkpt/denoiser_pgd_alternate4/chkpt.pth.tar"
+    RESULTS_PATH: 'results/'
