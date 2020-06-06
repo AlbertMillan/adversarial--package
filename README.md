@@ -28,6 +28,11 @@ To run HGD, execute the following command:
 git main.py --config "config/AT_HGD.yaml" --gpus "0,1"
 ```
 
+## Navigation
+Access to the implementation of Wide-ResNet or HGD is provided [here](https://github.com/AlbertMillan/adversarial--package/tree/master/adv_package).
+
+ To check how an HGD model is trained refer to this [file](https://github.com/AlbertMillan/adversarial--package/blob/master/adv_package/defense/evaluation.py)
+
 ## ToDo
 This repository is still work in progress and thus subject to contain undiscovered bugs. 
 Please report encountered issues to the author.
