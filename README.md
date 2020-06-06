@@ -11,6 +11,7 @@ An implementation of this model is retrieved from [[4]](https://github.com/xtern
 Download the code 
 ```
 git clone https://github.com/AlbertMillan/adversarial-training-pytorch.git
+cd adversarial--package
 ```
 
 Both attacks and defenses are performed using config files with .yaml extension. 
