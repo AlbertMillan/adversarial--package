@@ -25,7 +25,7 @@ git main.py --config "config/FGSM.yaml" --gpus "0,1"
 ### Defense
 To run HGD, execute the following command:
 ```
-git main.py --config "config/AT_HGD.yaml" --gpus "0,1"
+git test_main.py --config "config/AT_HGD.yaml" --gpus "0,1"
 ```
 
 ## Navigation
