@@ -149,7 +149,8 @@ class Pipeline:
         print(' * Prec@1 {top1.avg:.3f}'.format(top1=top1))
         return (losses.avg, top1.avg)
         
-        
+    
+    # Same method as the one above, just abstracted from adv_package.
     def run_defense_test(self, optim_config):
         defense.adversarial_training(self.train_model, self.wrapper, self.train_loader, \
                                      self.test_loader, optim_config, self.iterations,   \

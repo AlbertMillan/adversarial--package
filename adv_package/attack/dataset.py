@@ -4,7 +4,7 @@ import torch
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
 
-import sys
+import sys, os
 
 
 class Dataset(metaclass=ABCMeta):
@@ -202,6 +202,9 @@ class TORCH_CIFAR100(Dataset):
     
 
 def get_dataset(config):
+
+    if not os.path.exists(config.DIR_PATH):
+        os.makedirs(config.DIR_PATH)
     
     if config.NAME == 'CIFAR10':
         return TORCH_CIFAR10(config.DIR_PATH, config.CROP, config.NORMALIZE)

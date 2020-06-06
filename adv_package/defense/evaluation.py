@@ -6,7 +6,6 @@ from .optim import retrieve_optimizer
 
 
 def _step(self, train_model, x_batch, y_batch, optimizer, losses, top1):
-    print("AT TRAINING")
     
     # 2. Compute adversaries scores
     logits = train_model.forward(x_batch)

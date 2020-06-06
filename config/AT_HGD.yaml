@@ -1,6 +1,7 @@
 
 OPTIONS:
-    RAW: FALSE
+    # Whether to train on raw and/or adversarial examples.
+    RAW: TRUE
     ADV: TRUE
 
 HYPERPARAMETERS:
@@ -18,7 +19,6 @@ HYPERPARAMETERS:
 
 DATASET:
     NAME: 'CIFAR10'
-#     TRAIN: FALSE
     CLASSES: 10
     DIR_PATH: 'datasets/'
     NORMALIZE: FALSE
@@ -26,7 +26,7 @@ DATASET:
     
 ATTACK:
     NAME: "PGD"
-    MAX_ITER: 1
+    MAX_ITER: 7
     MOMENTUM: null
     # [CONSTANT(4), DYNAMIC(MAX_ITER), RANDOM_RANGE]
     EPSILON:
@@ -36,7 +36,8 @@ ATTACK:
         MAX: 17
     ALPHA:
         NAME: 'CONSTANT'
-        DIVISOR: 1
+        # Denominator to compute alpha: alpha = EPSILON / DIVISOR
+        DIVISOR: 4
 
 
 MODELS:
@@ -46,7 +47,7 @@ MODELS:
         TRAIN: TRUE
         PARALLEL: FALSE
         DENOISER_PATH: null
-        SAVE_DIR: "chkpt/denoiser_pgd1/"
+        SAVE_DIR: "chkpt/denoiser_pgd7/"
         TARGET:
             NAME: "WideResNet"
             DEPTH: 28
