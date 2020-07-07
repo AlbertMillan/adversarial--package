@@ -1,28 +1,41 @@
+from abc import ABCMeta, abstractmethod
 from torch import optim
 
 
-def adam(model, lr, weight_decay):
-    return optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+# class Optimizer(Metaclass=ABCMeta):
+#
+#     @abstractmethod
+#     def zeroGrad(self):
+#         ''' Sets the stored gradients to zero.'''
+#         raise NotImplementedError
+#
+#     @abstractmethod
+#     def step(self):
+#         ''' Performs a step for the given optimizer.'''
+#         raise NotImplementedError
 
+class OptimizerStep(object):
 
-def sgd(model, lr, momentum, nesterov, weight_decay):
-    return optim.SGD(model.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay, nesterov=nesterov)
+    def zeroGrad(self):
+        self.optim.zero_grad()
 
+    def step(self):
+        self.optim.step()
+        self.optim.zero_grad()
 
+class SGD(OptimizerStep):
 
-def retrieve_optimizer(config, model):
-    
-    optim_name = config.NAME.lower()
-    optimizer = None
-    
-    if optim_name == 'adam':
-        optimizer = adam(model, config.LEARNING_RATE, config.WEIGHT_DECAY)
-    elif optim_name == 'sgd':
-        optimizer = sgd(model, config.LEARNING_RATE, config.MOMENTUM, config.NESTEROV, config.WEIGHT_DECAY)
-    
-    else:
-        print("ERROR: Invalid optimizer configuration...")
-        
-    return optimizer
-    
-    
+    def __init__(self, optim_cfg, model_parameters):
+        self.optim = optim.SGD(model_parameters,
+                               lr=optim_cfg.LEARNING_RATE,
+                               weight_decay=optim_cfg.WEIGHT_DECAY,
+                               momentum=optim_cfg.MOMENTUM,
+                               nesterov=optim_cfg.NESTEROV)
+
+class ADAM(OptimizerStep):
+
+    def __init__(self, optim_cfg, model_parameters):
+        self.optim = optim.Adam(model_parameters,
+                                lr=optim_cfg.LEARNING_RATE,
+                                weight_decay=optim_cfg.WEIGHT_DECAY)
+

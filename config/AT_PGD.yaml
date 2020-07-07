@@ -1,9 +1,7 @@
-
-OPTIONS:
-    RAW: FALSE
-    ADV: TRUE
+TYPE: 'DEFENSE'
 
 HYPERPARAMETERS:
+    OPTIM: 'SGD'
     BATCH_SIZE: 64
     EPOCHS: 76
     LEARNING_RATE: 0.1
@@ -14,7 +12,6 @@ HYPERPARAMETERS:
 
 DATASET:
     NAME: 'CIFAR10'
-#     TRAIN: FALSE
     CLASSES: 10
     DIR_PATH: 'datasets/'
     NORMALIZE: FALSE
@@ -22,15 +19,21 @@ DATASET:
     
 ATTACK:
     NAME: "PGD"
+    STEP: 'BOTH_DEF'
     MAX_ITER: 1
-    # (8./255.)
-    EPSILON: 4
-    MOMENTUM: 0
+    EPSILON:
+        TYPE: 'FIXED'
+        VALUE: 4
+    ALPHA:
+        TYPE: 'CONSTANT'
+        DIVISOR: 10
+    INIT:
+        TYPE: 'SHIFT'
 
 
 MODELS:
-    # Model used to generate adversarial examples (ATTACK model)
-    TRAIN_MODEL:
+    # Model we are training
+    THREAT_MODEL:
         NAME: "WideResNet"
         DEPTH: 28
         WIDEN_FACTOR: 10
@@ -38,8 +41,8 @@ MODELS:
         PARALLEL: TRUE
         PRETRAINED: FALSE
         CHKPT_PATH: null
-    
-    # Model we are trying to fool
+
+    # Model used to generate adversarial examples (ATTACK model)
     ADV_MODEL:
         NAME: "WideResNet"
         DEPTH: 28
@@ -48,9 +51,6 @@ MODELS:
         PARALLEL: TRUE
         PRETRAINED: TRUE
         CHKPT_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
-    
-    
+
 PATHS:
-    ADV_MODEL_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
-    THREAT_MODEL_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
-    RESULTS_PATH: 'results/'
+    RESULTS: 'results/'

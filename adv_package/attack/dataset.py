@@ -201,23 +201,6 @@ class TORCH_CIFAR100(Dataset):
     
     
 
-def get_dataset(config):
-
-    if not os.path.exists(config.DIR_PATH):
-        os.makedirs(config.DIR_PATH)
-    
-    if config.NAME == 'CIFAR10':
-        return TORCH_CIFAR10(config.DIR_PATH, config.CROP, config.NORMALIZE)
-    
-    elif config.NAME == 'CIFAR100':
-        return TORCH_CIFAR100(config.DIR_PATH, config.CROP, config.NORMALIZE)
-        
-    
-    else:
-        print("ERROR: No dataset with name", config.NAME, "found. Exiting...")
-        sys.exit(1)
-        
-    
 if __name__ == "__main__":
     
     ds = TORCH_CIFAR10('datasets/', crop=True, normalized=True)

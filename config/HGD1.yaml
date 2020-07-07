@@ -23,7 +23,7 @@ ATTACK:
         TYPE: 'FIXED'
         VALUE: 8
     ALPHA:
-        NAME: 'CONSTANT'
+        TYPE: 'CONSTANT'
         DIVISOR: 4
 
 

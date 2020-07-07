@@ -1,9 +1,8 @@
 import torch
 from torch.utils.data import DataLoader
 
-from adv_package import attack, loader
+from adv_package import attack, loader, config
 from adv_package.utils import AverageMeter, accuracy
-import attacks
 
 import time, os, sys
 
@@ -11,35 +10,42 @@ import time, os, sys
 
 class Pipeline:
     
-    def __init__(self, ds_config, att_config, model_config, hp_config, options_config, path_config):
+    def __init__(self, cfg, ds_config, att_config, model_config, hp_config, options_config, path_config):
+
+        self._manager = config.AttackManager(cfg)
+
+        target_data = (self._manager.dataset.train_data if cfg.DATASET.TRAIN else self._manager.dataset.test_data)
+
+        # Create Data Loader for target data
+        self.batch_loader = DataLoader(target_data, batch_size=cfg.HYPERPARAMETERS.BATCH_SIZE)
         
-        adv_config = model_config.ADV_MODEL
-        threat_config = model_config.THREAT_MODEL
-        
-        # Retrieve Dataset Objects
-        data = attack.get_dataset(ds_config)
-        target_data = (data.train_data if ds_config.TRAIN else data.test_data)
-        
-        # Create Data Loader for either train or test data
-        self.batch_loader = DataLoader(target_data, batch_size=hp_config.BATCH_SIZE)
-        
-        # Set Options
-        self.include_raw = options_config.RAW
-        self.include_adv = options_config.ADV
-        
-        
-        # Set hyperparameters
-        self.print_freq = hp_config.PRINT_FREQ
-        self.cuda = torch.cuda.is_available()
-        
-        # TODO: MODIFY FOR PRETRAINED MODELS
-        
-        adv_model = loader.retrieve_model(adv_config, ds_config.CLASSES)
-        self.wrapper = attacks.retrieve(att_config, adv_model, ds_config.NORMALIZE)
-        
-        self.threat_model = loader.retrieve_model(threat_config, ds_config.CLASSES)
-    
-        print("Loaded MODELS...")
+        # adv_config = model_config.ADV_MODEL
+        # threat_config = model_config.THREAT_MODEL
+        #
+        # # Retrieve Dataset Objects
+        # data = attack.get_dataset(ds_config)
+        # target_data = (data.train_data if ds_config.TRAIN else data.test_data)
+        #
+        # # Create Data Loader for either train or test data
+        # self.batch_loader = DataLoader(target_data, batch_size=hp_config.BATCH_SIZE)
+        #
+        # # Set Options
+        # self.include_raw = options_config.RAW
+        # self.include_adv = options_config.ADV
+        #
+        #
+        # # Set hyperparameters
+        # self.print_freq = hp_config.PRINT_FREQ
+        # self.cuda = torch.cuda.is_available()
+        #
+        # # TODO: MODIFY FOR PRETRAINED MODELS
+        #
+        # adv_model = loader.retrieve_model(adv_config, ds_config.CLASSES)
+        # self.wrapper = attacks.retrieve(att_config, adv_model, ds_config.NORMALIZE)
+        #
+        # self.threat_model = loader.retrieve_model(threat_config, ds_config.CLASSES)
+        #
+        # print("Loaded MODELS...")
 
         
         
@@ -57,7 +63,7 @@ class Pipeline:
     
     # TODO: move this step to the package and implement a simple function...
     def run_attack(self):
-        self.threat_model.model.eval()
+        # self.threat_model.model.eval()
     
         losses = AverageMeter()
         batch_time = AverageMeter()
@@ -69,7 +75,9 @@ class Pipeline:
             
             x = x.cuda()
             y = y.cuda()
-            
+
+            x_adv = self._manager.attack.run(x, y)
+
             if self.include_raw:
                 self._step(x, y, losses, top1)
             

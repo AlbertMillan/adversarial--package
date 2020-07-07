@@ -2,10 +2,9 @@ import torch
 import time
 from ..utils import AverageMeter, accuracy
 from ..attack.evaluate import evaluate
-from .optim import retrieve_optimizer
 
 
-def _step(self, train_model, x_batch, y_batch, optimizer, losses, top1):
+def _step(train_model, x_batch, y_batch, optimizer, losses, top1):
     
     # 2. Compute adversaries scores
     logits = train_model.forward(x_batch)

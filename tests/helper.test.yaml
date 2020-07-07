@@ -1,0 +1,5 @@
+EPSILON:
+  TYPE: 'FIXED'
+  VALUE: 4
+  MIN_VAL: 4
+  MAX_VAL: 16

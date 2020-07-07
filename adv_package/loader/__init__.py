@@ -1,1 +1,1 @@
-from .model import retrieve_model
+from .model import ModelManager

@@ -1,10 +1,7 @@
-
-OPTIONS:
-    RAW: FALSE
-    ADV: TRUE
+TYPE: 'ATTACK'
 
 HYPERPARAMETERS:
-    BATCH_SIZE: 64
+    BATCH_SIZE: 1
     PRINT_FREQ: 10
 
 DATASET:
@@ -17,14 +14,17 @@ DATASET:
     
 ATTACK:
     NAME: "PGD"
-    MAX_ITER: 1
+    STEP: 'ADV_ATTACK'
+    MAX_ITER: 10
     MOMENTUM: 0
     EPSILON:
         TYPE: 'FIXED'
-        VALUE: 8
+        VALUE: 4
     ALPHA:
-        NAME: 'CONSTANT'
-        DIVISOR: 1
+        TYPE: 'CONSTANT'
+        DIVISOR: 10
+    INIT:
+        TYPE: 'RAW'
 
 
 MODELS:
@@ -47,9 +47,7 @@ MODELS:
         PARALLEL: TRUE
         PRETRAINED: TRUE
         CHKPT_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
-    
-    
+
 PATHS:
-    ADV_MODEL_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
-    THREAT_MODEL_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
-    RESULTS_PATH: 'results/'
+    RESULTS: 'results/'
+

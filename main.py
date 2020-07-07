@@ -3,7 +3,8 @@ import yaml
 import argparse
 from easydict import EasyDict
 
-from pipeline import Pipeline
+# from pipeline import Pipeline
+from adv_package.config import AttackManager, DefenseManager
 
 import os
 
@@ -13,6 +14,12 @@ def load_config(config_path):
         config = EasyDict(yaml.safe_load(file))
     
     return config
+
+
+managerDict = {
+    'ATTACK': AttackManager,
+    'DEFENSE': DefenseManager
+}
 
 
 def main():
@@ -27,11 +34,11 @@ def main():
     config = load_config(args.config)
     
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus
-    
-    pipeline = Pipeline(config.DATASET, config.ATTACK, config.MODELS, 
-                        config.HYPERPARAMETERS, config.OPTIONS, config.PATHS)
-    
-    loss, accuracy = pipeline.run_attack_test()
+
+    pipeline = managerDict[config.TYPE](config)
+
+    loss, accuracy = pipeline.run_pipeline()
+    # loss, accuracy = pipeline.run_attack_test()
     
     if not os.path.exists(config.PATHS.RESULTS_PATH):
         os.makedirs(config.PATHS.RESULTS_PATH)
