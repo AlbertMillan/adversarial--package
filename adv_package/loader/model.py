@@ -7,16 +7,15 @@ import shutil
 import sys, os
 
 
-# TODO: Maybe I can create a forward method to handle whether it is loaded with DataParallel or on single GPU
 class Model(metaclass=ABCMeta):
 
+    @property
     @abstractmethod
-    def get_model(self):
-        '''
-        Returns model. might not be necessary...
-        '''
+    def parameters(self):
+        ''' Returns relevant model parameters.'''
         raise NotImplementedError
 
+    # TODO: remove adversarial examples
     @abstractmethod
     def forward(self, x, x_adv=None):
         '''
@@ -89,18 +88,17 @@ class WrapperResNet(Model):
 
         self.model = resnet_model[depth]
 
-    def get_model(self):
-        return self.model
+    @property
+    def parameters(self):
+        return self.model.parameters()
 
     def forward(self, x, x_adv=None):
         return self.model.forward(x)
 
 
 class WrapperWideResNet(Model):
-    # TODO: Check on normalization conditions and if they match with the model pretrained version or not...
     # Maybe I can train the models, store them online, and download the model from some site...
     def __init__(self, model_cfg):
-        # depth, num_classes, widen_factor=1, dropRate=0.0, load_path=None, parallel=None):
         try:
             temp_model = WideResNet(model_cfg.DEPTH, 10, model_cfg.WIDEN_FACTOR, model_cfg.DROP_RATE)
             self.model = self._load_model(temp_model, model_cfg.CHKPT_PATH, model_cfg.PARALLEL)
@@ -113,8 +111,12 @@ class WrapperWideResNet(Model):
     def _load_model(self, model, load_path, parallel):
         return super()._load_model(model, load_path, parallel)
 
-    def get_model(self):
-        return self.model
+    def __call__(self, x):
+        return self.model(x)
+
+    @property
+    def parameters(self):
+        return self.model.parameters()
 
     def forward(self, x, x_adv=None):
         return self.model(x)
@@ -141,6 +143,10 @@ class WrapperHGD(Model):
             sys.exit(1)
         # self.save_dir = save_dir
 
+    @property
+    def parameters(self):
+        return self.model.denoiser.parameters()
+
     def _load_model(self, load_path, parallel):
         return super()._load_model(self.model.denoiser, load_path, parallel)
 
@@ -150,9 +156,7 @@ class WrapperHGD(Model):
         else:
             super()._save_checkpoint(is_best, self.model.denoiser.state_dict(), self.save_dir)
 
-    def get_model(self):
-        return self.model
-
+    # TODO: abstract with polymorphism
     def forward(self, x_adv, x=None):
         if self.model.training:
             out = self.model(x_adv, x)
@@ -160,6 +164,7 @@ class WrapperHGD(Model):
             out = self.model(x_adv)
         return out
 
+    # TODO: abstract with polymorphism (could have a training and test loss classes)
     def loss(self, logits_org, logits_smooth=None, y_batch=None):
         if self.model.training:
             return (self.model.module.train_loss(logits_org, logits_smooth) if self.parallel else \
@@ -184,27 +189,3 @@ class ModelManager:
         # TODO: Create Iterative version for HGD...
         return self._modelDict[self.cfg.NAME.lower()](self.cfg)
 
-
-# def retrieve_model(config, n_classes):
-#
-#     print(config)
-#
-#     model_name = config.NAME.lower()
-#     model = None
-#
-#     if model_name == 'resnet':
-#         model = WrapperResNet(config.DEPTH, config.PRETRAINED)
-#
-#     if model_name == 'wideresnet':
-#         model = WrapperWideResNet(config.DEPTH, n_classes, config.WIDEN_FACTOR, config.DROP_RATE, config.CHKPT_PATH, config.PARALLEL)
-#
-#     if model_name == 'hgd':
-#         # Get target model config
-#         target_model = retrieve_model(config.TARGET, n_classes)
-#         model = WrapperHGD(target_model.model, config.DENOISER_PATH, config.PARALLEL, config.TRAIN, config.SAVE_DIR)
-#
-#     return model
-
-
-if __name__ == '__main__':
-    pass

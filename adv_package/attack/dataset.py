@@ -94,7 +94,8 @@ class TORCH_CIFAR10(Dataset):
             self.max_val, self.min_val, self.eps_size = self.init_limits(self.mean, self.std)
             
             
-            
+
+    # TODO: Abstract this function and use polymorphism
     def _get_datasets(self, ds_path, crop, normalize, mean, std):
         
         train_data = None

@@ -1,8 +1,4 @@
-
-OPTIONS:
-    # Whether to train on raw and/or adversarial examples.
-    RAW: TRUE
-    ADV: TRUE
+TYPE: 'DEFENSE'
 
 HYPERPARAMETERS:
     BATCH_SIZE: 64
@@ -11,10 +7,6 @@ HYPERPARAMETERS:
         NAME: 'ADAM'
         LEARNING_RATE: 0.001
         WEIGHT_DECAY: 0
-#     LEARNING_RATE: 0.001
-#     MOMENTUM: null
-#     NESTEROV: null
-#     WEIGHT_DECAY: null
     PRINT_FREQ: 10
 
 DATASET:
@@ -25,25 +17,28 @@ DATASET:
     CROP: FALSE
     
 ATTACK:
-    NAME: "PGD"
+    NAME: 'PGD'
+    STEP: 'BOTH_HGD'
     MAX_ITER: 7
     MOMENTUM: null
     # [CONSTANT(4), DYNAMIC(MAX_ITER), RANDOM_RANGE]
     EPSILON:
         TYPE: 'RANDOM'
         VALUE: null
-        MIN: 0
-        MAX: 17
+        MIN_VAL: 0
+        MAX_VAL: 17
     ALPHA:
-        NAME: 'CONSTANT'
+        TYPE: 'CONSTANT'
         # Denominator to compute alpha: alpha = EPSILON / DIVISOR
         DIVISOR: 4
+    INIT:
+        TYPE: 'RAW'
 
 
 MODELS:
-    # Model used to generate adversarial examples (ATTACK model)
-    TRAIN_MODEL:
-        NAME: "HGD"
+    # Model we seek to train
+    THREAT_MODEL:
+        NAME: 'HGD'
         TRAIN: TRUE
         PARALLEL: FALSE
         DENOISER_PATH: null
@@ -59,7 +54,7 @@ MODELS:
     
     # Model we are trying to fool
     ADV_MODEL:
-        NAME: "WideResNet"
+        NAME: 'WideResNet'
         DEPTH: 28
         WIDEN_FACTOR: 10
         DROP_RATE: 0

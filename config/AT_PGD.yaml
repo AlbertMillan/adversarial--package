@@ -1,13 +1,14 @@
 TYPE: 'DEFENSE'
 
 HYPERPARAMETERS:
-    OPTIM: 'SGD'
     BATCH_SIZE: 64
     EPOCHS: 76
-    LEARNING_RATE: 0.1
-    MOMENTUM: 0.9
-    NESTEROV: TRUE
-    WEIGHT_DECAY: 0.0002
+    OPTIM:
+        NAME: 'SGD'
+        LEARNING_RATE: 0.1
+        MOMENTUM: 0.9
+        NESTEROV: TRUE
+        WEIGHT_DECAY: 0.0002
     PRINT_FREQ: 10
 
 DATASET:
@@ -18,7 +19,7 @@ DATASET:
     CROP: FALSE
     
 ATTACK:
-    NAME: "PGD"
+    NAME: 'PGD'
     STEP: 'BOTH_DEF'
     MAX_ITER: 1
     EPSILON:
@@ -26,7 +27,7 @@ ATTACK:
         VALUE: 4
     ALPHA:
         TYPE: 'CONSTANT'
-        DIVISOR: 10
+        DIVISOR: 1
     INIT:
         TYPE: 'SHIFT'
 

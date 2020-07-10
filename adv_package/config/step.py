@@ -55,7 +55,6 @@ class StepManager(Step):
         prec1 = accuracy(logits.data, y_batch)
         self.top1.update(prec1.item(), y_batch.size(0))
         self.lossMeter.update(loss.item(), y_batch.size(0))
-        # TODO: Deal with Time Meter...
 
     @classmethod
     def retrieve_model(cls, model_cfg):
@@ -70,8 +69,8 @@ class StepManager(Step):
             i, n_batches, batch_time=self.batch_time,
             loss=self.lossMeter, top1=self.top1))
 
-class DefenseStep(StepManager):
 
+class DefenseStep(StepManager):
     _optimDict = {
         'SGD': SGD,
         'ADAM': ADAM
@@ -82,10 +81,24 @@ class DefenseStep(StepManager):
         self.optimManager = self.setOptimizer(optim_cfg, self.threat_model.model.parameters())
 
     def setOptimizer(self, optim_cfg, model_param):
-        return self._optimDict[optim_cfg.OPTIM](optim_cfg, model_param)
+        return self._optimDict[optim_cfg.NAME](optim_cfg, model_param)
 
     def optimStep(self):
         self.optimManager.step()
+
+
+class HGDStep(DefenseStep):
+    ''' Class aiming to provide distinct functionality during training and testing a defense method.'''
+
+    def __init__(self, att_cfg, models_cfg, optim_cfg):
+        super().__init__(att_cfg, models_cfg, optim_cfg)
+
+    def step(self, x_batch, y_batch):
+        if self.threat_model.model.training:
+            self.trainStep(x_batch, y_batch)
+        else:
+            self.testStep(x_batch, y_batch)
+
 
 class RawAttackStep(StepManager):
 
@@ -131,6 +144,8 @@ class RawDefenseStep(DefenseStep):
         logits = self.threat_model.forward(x_batch)
         loss = self.threat_model.loss(logits, y_batch)
 
+        loss.backward()
+
         self.store(logits, loss, y_batch)
 
         self.optimManager.step()
@@ -144,6 +159,8 @@ class AdvDefenseStep(DefenseStep):
         logits = self.threat_model.forward(x_adv)
         loss = self.threat_model.loss(logits, y_batch)
 
+        loss.backward()
+
         self.store(logits, loss, y_batch)
 
         self.optimManager.step()
@@ -155,6 +172,7 @@ class MixedDefenseStep(DefenseStep):
         ''' Computes peformance based on raw and adv data.'''
         logits = self.threat_model.forward(x_batch)
         loss = self.threat_model.loss(logits, y_batch)
+        loss.backward()
 
         self.store(logits, loss, y_batch)
         self.optimManager.step()
@@ -162,6 +180,65 @@ class MixedDefenseStep(DefenseStep):
         x_adv = self.attack.run(x_batch, y_batch)
         logits = self.threat_model.forward(x_adv)
         loss = self.threat_model.loss(logits, y_batch)
+        loss.backward()
 
         self.store(logits, loss, y_batch)
         self.optimManager.step()
+
+
+class AdvHGDStep(HGDStep):
+    ''' There is a difference on how the loss is computed during training and testing procedure.'''
+    # TODO: Can I reduce the key difference here and abstract the method?
+    def trainStep(self, x_batch, y_batch):
+        # 1. Generate adversarial example.
+        x_adv = self.attack.run(x_batch, y_batch)
+
+        # KEY DIFFERENCE (logits) Assume training procedure for now...
+        lg_smooth, lg_raw = self.threat_model.trainForward(x_adv, x_batch)
+        loss = self.threat_model.trainLoss(lg_raw, lg_smooth)
+        loss.backward()
+
+        self.store(lg_smooth, loss, y_batch)
+        self.optimManager.step()
+
+    def testStep(self, x_batch, y_batch):
+        x_adv = self.attack.run(x_batch, y_batch)
+
+        logits = self.threat_model.testForward(x_adv)
+        loss = self.threat_model.testLoss(logits)
+
+        self.store(logits, loss, y_batch)
+        self.optimManager.zeroGrad()
+
+
+class MixedHGDStep(HGDStep):
+
+    def trainStep(self, x_batch, y_batch):
+        lg_smooth, lg_raw = self.threat_model.forward(x_batch, x_batch)
+        loss = self.threat_model.loss(lg_raw, lg_smooth)
+        loss.backward()
+
+        self.store(lg_smooth, loss, y_batch)
+        self.optimManager.step()
+
+        x_adv = self.attack.run(x_batch, y_batch)
+        lg_smooth, lg_raw = self.threat_model.forward(x_adv, x_batch)
+        loss = self.threat_model.loss(lg_raw, lg_smooth)
+        loss.backward()
+
+        self.store(lg_smooth, loss, y_batch)
+        self.optimManager.step()
+
+    def testStep(self, x_batch, y_batch):
+        logits = self.threat_model.testForward(x_batch)
+        loss = self.threat_model.testLoss(logits)
+
+        self.store(logits, loss, y_batch)
+        self.optimManager.zeroGrad()
+
+        x_adv = self.attack.run(x_batch, y_batch)
+        logits = self.threat_model.testForward(x_adv)
+        loss = self.threat_model.testLoss(logits)
+
+        self.store(logits, loss, y_batch)
+        self.optimManager.zeroGrad()

@@ -1,9 +1,11 @@
 from abc import ABCMeta, abstractmethod
 from torch.utils.data import DataLoader
+from torch import optim
 import sys
 
 from ..attack.dataset import TORCH_CIFAR10, TORCH_CIFAR100
-from .step import RawAttackStep, RawDefenseStep, AdvAttackStep, AdvDefenseStep, MixedAttackStep, MixedDefenseStep
+from .step import RawAttackStep, RawDefenseStep, AdvAttackStep,\
+    AdvDefenseStep, MixedAttackStep, MixedDefenseStep, AdvHGDStep, MixedHGDStep
 
 
 class ConfigManager(metaclass=ABCMeta):
@@ -17,8 +19,10 @@ class ConfigManager(metaclass=ABCMeta):
         'RAW_DEF': RawDefenseStep,
         'ADV_ATT': AdvAttackStep,
         'ADV_DEF': AdvDefenseStep,
+        'ADV_HGD': AdvHGDStep,
         'BOTH_ATT': MixedAttackStep,
         'BOTH_DEF': MixedDefenseStep,
+        'BOTH_HGD': MixedHGDStep
     }
 
     @abstractmethod
@@ -81,11 +85,10 @@ class AttackManager(ConfigManager):
 class DefenseManager(ConfigManager):
 
     def __init__(self, config):
-        # TODO: DATASET MANAGER?
         dataset = self.setDataset(config.DATASET)
         self.train_loader = DataLoader(dataset.train_data, batch_size=config.HYPERPARAMETERS.BATCH_SIZE)
         self.test_loader = DataLoader(dataset.test_data, batch_size=config.HYPERPARAMETERS.BATCH_SIZE)
-        self.stepManager = self.setStep(config.ATTACK, config.MODELS, config.HYPERPARAMETERS)
+        self.stepManager = self.setStep(config.ATTACK, config.MODELS, config.HYPERPARAMETERS.OPTIM)
         self.paths = config.PATHS
 
         # Hyperparameters configuration
@@ -113,7 +116,8 @@ class DefenseManager(ConfigManager):
             sys.exit(1)
 
     def run_pipeline(self):
-        # TODO: Storing the state of the model during training
+        # TODO: Storing the state of the model during training.
+        # TODO: Add testing on each iteration of the model.
 
         best_pred = 0.0
 
