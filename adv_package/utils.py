@@ -18,9 +18,21 @@ class AverageMeter():
         self.sum += val * n
         self.count += n
         self.avg = self.sum / self.count
-        
 
-        
+
+class MetricTracker(object):
+
+    def __init__(self):
+        self.loss_hist = []
+        self.acc1_hist = []
+        self.acc5_hist = []
+
+    def update(self, loss, acc1, acc5):
+        self.loss_hist.append(loss)
+        self.acc1_hist.append(acc1)
+        self.acc5_hist.append(acc5)
+
+
 def accuracy(logits, y, K=1):
     """Computes the precision@k for the specified values of k"""
     # Reshape to [N, 1]

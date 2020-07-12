@@ -19,7 +19,7 @@ DATASET:
 ATTACK:
     NAME: 'PGD'
     STEP: 'BOTH_HGD'
-    MAX_ITER: 7
+    MAX_ITER: 1
     MOMENTUM: null
     # [CONSTANT(4), DYNAMIC(MAX_ITER), RANDOM_RANGE]
     EPSILON:
@@ -30,7 +30,7 @@ ATTACK:
     ALPHA:
         TYPE: 'CONSTANT'
         # Denominator to compute alpha: alpha = EPSILON / DIVISOR
-        DIVISOR: 4
+        DIVISOR: 1
     INIT:
         TYPE: 'RAW'
 
@@ -42,7 +42,6 @@ MODELS:
         TRAIN: TRUE
         PARALLEL: FALSE
         DENOISER_PATH: null
-        SAVE_DIR: "chkpt/denoiser_pgd7/"
         TARGET:
             NAME: "WideResNet"
             DEPTH: 28
@@ -64,6 +63,6 @@ MODELS:
 
     
 PATHS:
-    ADV_MODEL_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
-    THREAT_MODEL_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
+    SAVE_DIR: 'chkpt/denoiser_pgd7/'
+    SAVE_NAME: 'model_best.pth.tar'
     RESULTS_PATH: 'results/'

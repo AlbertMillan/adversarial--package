@@ -54,4 +54,6 @@ MODELS:
         CHKPT_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
 
 PATHS:
+    SAVE_DIR: 'chkpt/chkpt_fgsm/'
+    SAVE_NAME: 'model_best.pth.tar'
     RESULTS: 'results/'

@@ -3,6 +3,7 @@ from torch.utils.data import DataLoader
 from torch import optim
 import sys
 
+from ..utils import MetricTracker
 from ..attack.dataset import TORCH_CIFAR10, TORCH_CIFAR100
 from .step import RawAttackStep, RawDefenseStep, AdvAttackStep,\
     AdvDefenseStep, MixedAttackStep, MixedDefenseStep, AdvHGDStep, MixedHGDStep
@@ -35,15 +36,32 @@ class ConfigManager(metaclass=ABCMeta):
         ''' Sets the step conducted on each training iteration. '''
         raise NotImplementedError
 
+    @staticmethod
+    def computeEpoch(batch_loader, stepManager, print_freq):
+        for i, (x, y) in enumerate(batch_loader):
+
+            x = x.cuda()
+            y = y.cuda()
+
+            # Performs a step in the training procedure
+            stepManager.takeTime()
+            stepManager.step(x, y)
+            stepManager.takeTime()
+
+            if i % print_freq == 0:
+                print(stepManager.log(i, len(batch_loader)))
+
+        print(' * Prec@1 {top1.avg:.3f}'.format(top1=stepManager.top1))
+        return stepManager.lossMeter.avg, stepManager.top1.avg, stepManager.top5.avg
+
 
 class AttackManager(ConfigManager):
 
     def __init__(self, config):
-        # TODO: DATASET MANAGER?
+        super().__init__(config)
         dataset = self.setDataset(config.DATASET)
         target_data = (dataset.train_data if config.DATASET.TRAIN else self.dataset.test_data)
         self.batch_loader = DataLoader(target_data, batch_size=config.HYPERPARAMETERS.BATCH_SIZE)
-        self.stepManager = self.setStep(config.ATTACK, config.MODELS)
         self.paths = config.PATHS
         self.print_freq = config.HYPERPARAMETERS.PRINT_FREQ
 
@@ -64,22 +82,23 @@ class AttackManager(ConfigManager):
             sys.exit(1)
 
     def run_pipeline(self):
+        self.computeEpoch(self.batch_loader, self.stepManager, self.print_freq)
 
-        for i, (x, y) in enumerate(self.batch_loader):
-
-            x = x.cuda()
-            y = y.cuda()
-
-            # Performs a step in the training procedure
-            self.stepManager.takeTime()
-            self.stepManager.step(x, y)
-            self.stepManager.takeTime()
-
-            if i % self.print_freq == 10:
-                print(self.stepManager)
-
-        print(' * Prec@1 {top1.avg:.3f}'.format(top1=self.stepManager.top1))
-        return self.stepManager.lossMeter.avg, self.stepManager.top1.avg
+        # for i, (x, y) in enumerate(self.batch_loader):
+        #
+        #     x = x.cuda()
+        #     y = y.cuda()
+        #
+        #     # Performs a step in the training procedure
+        #     self.stepManager.takeTime()
+        #     self.stepManager.step(x, y)
+        #     self.stepManager.takeTime()
+        #
+        #     if i % self.print_freq == 10:
+        #         print(self.stepManager)
+        #
+        # print(' * Prec@1 {top1.avg:.3f}'.format(top1=self.stepManager.top1))
+        # return self.stepManager.lossMeter.avg, self.stepManager.top1.avg
 
 
 class DefenseManager(ConfigManager):
@@ -95,9 +114,8 @@ class DefenseManager(ConfigManager):
         self.iterations = config.HYPERPARAMETERS.EPOCHS
         self.print_freq = config.HYPERPARAMETERS.PRINT_FREQ
 
-        self.train_loss_hist = []
-        self.train_acc1_hist = []
-        self.train_acc5_hist = []
+        self.train_metrics = MetricTracker()
+        self.test_metrics = MetricTracker()
 
     def setDataset(self, arg):
         try:
@@ -116,32 +134,33 @@ class DefenseManager(ConfigManager):
             sys.exit(1)
 
     def run_pipeline(self):
-        # TODO: Storing the state of the model during training.
         # TODO: Add testing on each iteration of the model.
 
         best_pred = 0.0
 
         for epoch in range(self.iterations):
             self.stepManager.restart()
+            self.stepManager.threat_model.model.train()
 
-            for i, (x, y) in enumerate(self.train_loader):
+            self.computeEpoch(self.train_loader, self.stepManager, self.print_freq)
 
-                x = x.cuda()
-                y = y.cuda()
+            self.train_metrics.update(self.stepManager.lossMeter.avg,
+                                      self.stepManager.top1.avg,
+                                      self.stepManager.top5.avg)
 
-                # Performs a step in the training procedure
-                self.stepManager.takeTime()
-                self.stepManager.step(x, y)
-                self.stepManager.takeTime()
+            # Evaluation on test data
+            self.stepManager.restart()
+            test_loss, test_acc1, test_acc5 = self.eval()
+            self.test_metrics.update(test_loss, test_acc1, test_acc5)
 
-                if i % self.print_freq == 0:
-                    print(self.stepManager.log(i, len(self.train_loader)))
-
-            self.train_loss_hist.append(self.stepManager.lossMeter.avg)
-            self.train_acc1_hist.append(self.stepManager.top1.avg)
-            self.train_acc5_hist.append(self.stepManager.top5.avg)
+            if test_acc1 > best_pred:
+                best_pred = test_acc1
+                self.stepManager.threat_model.save_model(self.paths.SAVE_DIR, self.paths.SAVE_NAME)
 
         # print(' * Prec@1 {top1.avg:.3f}'.format(top1=self.stepManager.top1))
-        return self.stepManager.lossMeter.avg, self.stepManager.top1.avg
+        return self.stepManager.lossMeter.avg, self.stepManager.top1.avg, self.stepManager.top5.avg
 
 
+    def eval(self):
+        self.stepManager.threat_model.model.eval()
+        return self.computeEpoch(self.test_loader, self.stepManager, self.print_freq)
