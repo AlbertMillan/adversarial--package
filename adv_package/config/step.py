@@ -194,7 +194,7 @@ class AdvHGDStep(HGDStep):
         x_adv = self.attack.run(x_batch, y_batch)
 
         # KEY DIFFERENCE (logits) Assume training procedure for now...
-        lg_smooth, lg_raw = self.threat_model.trainForward(x_adv, x_batch)
+        lg_smooth, lg_raw = self.threat_model.trainForward(x_batch, x_adv)
         loss = self.threat_model.trainLoss(lg_raw, lg_smooth)
         loss.backward()
 
@@ -214,16 +214,16 @@ class AdvHGDStep(HGDStep):
 class MixedHGDStep(HGDStep):
 
     def trainStep(self, x_batch, y_batch):
-        lg_smooth, lg_raw = self.threat_model.forward(x_batch, x_batch)
-        loss = self.threat_model.loss(lg_raw, lg_smooth)
+        lg_smooth, lg_raw = self.threat_model.trainForward(x_batch, x_batch)
+        loss = self.threat_model.trainLoss(lg_raw, lg_smooth)
         loss.backward()
 
         self.store(lg_smooth, loss, y_batch)
         self.optimManager.step()
 
         x_adv = self.attack.run(x_batch, y_batch)
-        lg_smooth, lg_raw = self.threat_model.forward(x_adv, x_batch)
-        loss = self.threat_model.loss(lg_raw, lg_smooth)
+        lg_smooth, lg_raw = self.threat_model.trainForward(x_batch, x_adv)
+        loss = self.threat_model.trainLoss(lg_raw, lg_smooth)
         loss.backward()
 
         self.store(lg_smooth, loss, y_batch)
