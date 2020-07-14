@@ -148,6 +148,9 @@ class DefenseManager(ConfigManager):
                                       self.stepManager.top1.avg,
                                       self.stepManager.top5.avg)
 
+            # Account for step performed on scheduler...
+            self.stepManager.optimManager.schedulerStep()
+
             # Evaluation on test data
             self.stepManager.restart()
             test_loss, test_acc1, test_acc5 = self.eval()
