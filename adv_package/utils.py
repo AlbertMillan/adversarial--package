@@ -1,4 +1,3 @@
-import numpy as np
 import torch
 
 
@@ -31,6 +30,26 @@ class MetricTracker(object):
         self.loss_hist.append(loss)
         self.acc1_hist.append(acc1)
         self.acc5_hist.append(acc5)
+
+
+class Logger(object):
+
+    def __init__(self, log_cfg, procedure, cfg_name):
+        self.folder = log_cfg.DIR
+        self.file_name = log_cfg.FILE
+        self.path = self.folder + self.file_name
+        self.procedure = procedure
+        self.cfg_name = cfg_name
+
+    def update(self, metrics):
+        ''' Writes down results of experiment given final metrics object. '''
+        # 1. Open file, if not created create a new one.
+        with open(self.path, 'a+') as f:
+            f.write(
+                'TYPE: {0} \t CONFIG: {1} \t LOSS: {loss:.3f} \t TOP1: {acc1:.3f} \t TOP5: {acc5:.3f}\n'.format(
+                    self.procedure, self.cfg_name, loss=metrics[0], acc1=metrics[1], acc5=metrics[2]
+                )
+            )
 
 
 def accuracy(logits, y, K=1):

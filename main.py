@@ -4,6 +4,7 @@ import argparse
 from easydict import EasyDict
 
 # from pipeline import Pipeline
+from adv_package import Logger
 from adv_package.config import AttackManager, DefenseManager
 
 import os
@@ -23,7 +24,6 @@ managerDict = {
 
 
 def main():
-    
     parser = argparse.ArgumentParser(description='PyTorch Adversarial Attack package.')
     
     parser.add_argument('--config', required=True, type=str, help='Path to .yaml configuration file.')
@@ -37,17 +37,18 @@ def main():
 
     pipeline = managerDict[config.TYPE](config)
 
-    loss, accuracy = pipeline.run_pipeline()
-    # loss, accuracy = pipeline.run_attack_test()
-    
+    loss, acc1, acc5 = pipeline.run_pipeline()
+
+    # Save history results
     if not os.path.exists(config.PATHS.RESULTS_PATH):
         os.makedirs(config.PATHS.RESULTS_PATH)
         
     np.save(config.PATHS.RESULTS_PATH + 'loss.npy', loss)
-    np.save(config.PATHS.RESULTS_PATH + 'accuracy.npy', accuracy)
-    
-    
-    
+    np.save(config.PATHS.RESULTS_PATH + 'accuracy.npy', acc1)
+
+    # Log best results
+    logManager = Logger(config.LOGGER, config.TYPE, args.config)
+    logManager.update((loss, acc1, acc5))
 
 if __name__ == "__main__":
     main()
