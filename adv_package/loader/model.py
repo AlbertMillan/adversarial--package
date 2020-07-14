@@ -230,7 +230,6 @@ class WrapperHGD(Model):
 
 
 class ModelManager:
-    # TODO: Implement Model Loader Class
     _modelDict = {
         'resnet': WrapperResNet,
         'wideresnet': WrapperWideResNet,

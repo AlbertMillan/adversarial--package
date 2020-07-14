@@ -7,6 +7,10 @@ HYPERPARAMETERS:
         NAME: 'ADAM'
         LEARNING_RATE: 0.001
         WEIGHT_DECAY: 0
+        SCHEDULER:
+            NAME: 'STEP'
+            EPOCH: 25
+            LR_DECAY: 0.1
     PRINT_FREQ: 10
 
 DATASET:
@@ -19,7 +23,7 @@ DATASET:
 ATTACK:
     NAME: 'PGD'
     STEP: 'BOTH_HGD'
-    MAX_ITER: 1
+    MAX_ITER: 7
     MOMENTUM: null
     # [CONSTANT(4), DYNAMIC(MAX_ITER), RANDOM_RANGE]
     EPSILON:
@@ -28,9 +32,9 @@ ATTACK:
         MIN_VAL: 0
         MAX_VAL: 17
     ALPHA:
-        TYPE: 'CONSTANT'
+        TYPE: 'DIVISOR'
         # Denominator to compute alpha: alpha = EPSILON / DIVISOR
-        DIVISOR: 1
+        DIVISOR: 4
     INIT:
         TYPE: 'RAW'
 
@@ -63,6 +67,10 @@ MODELS:
 
     
 PATHS:
-    SAVE_DIR: 'chkpt/denoiser_pgd7/'
+    SAVE_DIR: 'chkpt/denoiser_ifgsm7/'
     SAVE_NAME: 'model_best.pth.tar'
     RESULTS_PATH: 'results/'
+
+LOGGER:
+    DIR: ''
+    FILE: 'experiments.txt'

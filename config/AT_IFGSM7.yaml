@@ -9,6 +9,10 @@ HYPERPARAMETERS:
         MOMENTUM: 0.9
         NESTEROV: TRUE
         WEIGHT_DECAY: 0.0002
+        SCHEDULER:
+            NAME: 'STEP'
+            EPOCH: 75
+            LR_DECAY: 0.1
     PRINT_FREQ: 10
 
 DATASET:
@@ -17,19 +21,19 @@ DATASET:
     DIR_PATH: 'datasets/'
     NORMALIZE: FALSE
     CROP: FALSE
-    
+
 ATTACK:
     NAME: 'PGD'
     STEP: 'BOTH_DEF'
-    MAX_ITER: 1
+    MAX_ITER: 7
     EPSILON:
         TYPE: 'FIXED'
-        VALUE: 4
+        VALUE: 8
     ALPHA:
-        TYPE: 'CONSTANT'
-        DIVISOR: 1
+        TYPE: 'FIXED'
+        VALUE: 2
     INIT:
-        TYPE: 'SHIFT'
+        TYPE: 'RAW'
 
 
 MODELS:
@@ -54,6 +58,10 @@ MODELS:
         CHKPT_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
 
 PATHS:
-    SAVE_DIR: 'chkpt/chkpt_fgsm/'
+    SAVE_DIR: 'chkpt/ifgsm78/'
     SAVE_NAME: 'model_best.pth.tar'
     RESULTS: 'results/'
+
+LOGGER:
+  DIR: ''
+  FILE: 'experiments.txt'

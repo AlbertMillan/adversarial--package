@@ -1,0 +1,67 @@
+TYPE: 'DEFENSE'
+
+HYPERPARAMETERS:
+    BATCH_SIZE: 64
+    EPOCHS: 76
+    OPTIM:
+        NAME: 'SGD'
+        LEARNING_RATE: 0.1
+        MOMENTUM: 0.9
+        NESTEROV: TRUE
+        WEIGHT_DECAY: 0.0002
+        SCHEDULER:
+            NAME: 'STEP'
+            EPOCH: 75
+            LR_DECAY: 0.1
+    PRINT_FREQ: 10
+
+DATASET:
+    NAME: 'CIFAR10'
+    CLASSES: 10
+    DIR_PATH: 'datasets/'
+    NORMALIZE: FALSE
+    CROP: FALSE
+    
+ATTACK:
+    NAME: 'PGD'
+    STEP: 'BOTH_DEF'
+    MAX_ITER: 7
+    EPSILON:
+        TYPE: 'FIXED'
+        VALUE: 8
+    ALPHA:
+        TYPE: 'FIXED'
+        VALUE: 2
+    INIT:
+        TYPE: 'SHIFT'
+
+
+MODELS:
+    # Model we are training
+    THREAT_MODEL:
+        NAME: "WideResNet"
+        DEPTH: 28
+        WIDEN_FACTOR: 10
+        DROP_RATE: 0
+        PARALLEL: TRUE
+        PRETRAINED: FALSE
+        CHKPT_PATH: null
+
+    # Model used to generate adversarial examples (ATTACK model)
+    ADV_MODEL:
+        NAME: "WideResNet"
+        DEPTH: 28
+        WIDEN_FACTOR: 10
+        DROP_RATE: 0
+        PARALLEL: TRUE
+        PRETRAINED: TRUE
+        CHKPT_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
+
+PATHS:
+    SAVE_DIR: 'chkpt/pgd_madry78/'
+    SAVE_NAME: 'model_best.pth.tar'
+    RESULTS: 'results/'
+
+LOGGER:
+    DIR: ''
+    FILE: 'experiments.txt'
