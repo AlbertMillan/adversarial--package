@@ -66,6 +66,13 @@ class RandomEpsilon(EpsilonManager):
 
         return (torch.randint(low=self.min_val, high=self.max_val, size=(batch_size,1,1,1))).float() / 255.
 
+class FixedAlpha(AlphaManager):
+
+    def __init__(self, alpha_cfg):
+        self.alpha = alpha_cfg.VALUE
+
+    def getAlpha(self):
+        return self.alpha / 255.
 
 class DivisorAlpha(AlphaManager):
 

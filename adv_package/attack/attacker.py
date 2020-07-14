@@ -3,7 +3,7 @@ import torch
 import sys
 
 from ..loader.model import ModelManager
-from .gradientHelper import FixedEpsilon, RandomEpsilon, DivisorAlpha, ZeroShift, RandomShift
+from .gradientHelper import FixedEpsilon, RandomEpsilon, FixedAlpha, DivisorAlpha, ZeroShift, RandomShift
 
 class Attack(metaclass=ABCMeta):
 
@@ -58,7 +58,8 @@ class GradientAttack(Attack):
     }
 
     _alphaDict = {
-        'CONSTANT': DivisorAlpha
+        'FIXED': FixedAlpha,
+        'DIVISOR': DivisorAlpha
     }
 
     _shiftDict = {
@@ -73,7 +74,6 @@ class GradientAttack(Attack):
         self.initManager = self.setShift(att_cfg.INIT)
         self.max_iter = att_cfg.MAX_ITER
 
-    # TODO: Retrieve epsilon and alpha using polymorphism
     def setEpsilon(self, eps_cfg):
         try:
             return self._epsilonDict[eps_cfg.TYPE](eps_cfg)
