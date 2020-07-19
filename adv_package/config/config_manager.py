@@ -5,8 +5,8 @@ import sys
 
 from ..utils import MetricTracker
 from ..attack.dataset import TORCH_CIFAR10, TORCH_CIFAR100
-from .step import RawAttackStep, RawDefenseStep, AdvAttackStep,\
-    AdvDefenseStep, MixedAttackStep, MixedDefenseStep, AdvHGDStep, MixedHGDStep
+from .step_manager import RawStep, AdvStep, MixedStep, AdvHGDStep, MixedHGDStep
+from .step_manager import StepManager, DefenseStep
 
 
 class ConfigManager(metaclass=ABCMeta):
@@ -15,16 +15,24 @@ class ConfigManager(metaclass=ABCMeta):
         'CIFAR100': TORCH_CIFAR100
     }
 
+    # _stepDict = {
+    #     'ATTACK':
+    # }
+
     _stepDict = {
-        'RAW_ATT': RawAttackStep,
-        'RAW_DEF': RawDefenseStep,
-        'ADV_ATT': AdvAttackStep,
-        'ADV_DEF': AdvDefenseStep,
+        'RAW': RawStep,
+        'ADV': AdvStep,
+        'BOTH': MixedStep,
         'ADV_HGD': AdvHGDStep,
-        'BOTH_ATT': MixedAttackStep,
-        'BOTH_DEF': MixedDefenseStep,
         'BOTH_HGD': MixedHGDStep
     }
+    # _stepDict = {
+    #     'RAW': RawStep,
+    #     'ADV': AdvStep,
+    #     'BOTH': MixedStep,
+    #     'ADV_HGD': AdvHGDStep,
+    #     'BOTH_HGD': MixedHGDStep
+    # }
 
     @abstractmethod
     def setDataset(self, arg):
@@ -58,10 +66,11 @@ class ConfigManager(metaclass=ABCMeta):
 class AttackManager(ConfigManager):
 
     def __init__(self, config):
-        super().__init__(config)
+        # super().__init__(config)
         dataset = self.setDataset(config.DATASET)
-        target_data = (dataset.train_data if config.DATASET.TRAIN else self.dataset.test_data)
+        target_data = (dataset.train_data if config.DATASET.TRAIN else dataset.test_data)
         self.batch_loader = DataLoader(target_data, batch_size=config.HYPERPARAMETERS.BATCH_SIZE)
+        self.stepManager = self.setStep(config.ATTACK, config.MODELS)
         self.paths = config.PATHS
         self.print_freq = config.HYPERPARAMETERS.PRINT_FREQ
 
@@ -73,6 +82,9 @@ class AttackManager(ConfigManager):
             print(err)
             sys.exit(1)
 
+    # def setStep(self, att_cfg, model_cfg):
+    #     return StepManager(att_cfg, model_cfg)
+
     def setStep(self, att_cfg, model_cfg):
         try:
             return self._stepDict[att_cfg.STEP](att_cfg, model_cfg)
@@ -82,23 +94,8 @@ class AttackManager(ConfigManager):
             sys.exit(1)
 
     def run_pipeline(self):
+        self.stepManager.threat_model.model.eval()
         self.computeEpoch(self.batch_loader, self.stepManager, self.print_freq)
-
-        # for i, (x, y) in enumerate(self.batch_loader):
-        #
-        #     x = x.cuda()
-        #     y = y.cuda()
-        #
-        #     # Performs a step in the training procedure
-        #     self.stepManager.takeTime()
-        #     self.stepManager.step(x, y)
-        #     self.stepManager.takeTime()
-        #
-        #     if i % self.print_freq == 10:
-        #         print(self.stepManager)
-        #
-        # print(' * Prec@1 {top1.avg:.3f}'.format(top1=self.stepManager.top1))
-        # return self.stepManager.lossMeter.avg, self.stepManager.top1.avg
 
 
 class DefenseManager(ConfigManager):
@@ -124,6 +121,8 @@ class DefenseManager(ConfigManager):
             print('Error: Undefined variable in constructor {0}'.format(self.__class__.__name__))
             print(err)
             sys.exit(1)
+
+    # def setStep(self, ):
 
     def setStep(self, att_cfg, model_cfg, hyperparam_cfg):
         try:

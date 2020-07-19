@@ -14,14 +14,14 @@ DATASET:
     
 ATTACK:
     NAME: "PGD"
-    STEP: 'ADV_ATTACK'
+    STEP: 'ADV'
     MAX_ITER: 10
     MOMENTUM: 0
     EPSILON:
         TYPE: 'FIXED'
         VALUE: 4
     ALPHA:
-        TYPE: 'CONSTANT'
+        TYPE: 'DIVISOR'
         DIVISOR: 10
     INIT:
         TYPE: 'RAW'
