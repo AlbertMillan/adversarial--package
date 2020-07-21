@@ -28,6 +28,8 @@ def main():
     
     parser.add_argument('--config', required=True, type=str, help='Path to .yaml configuration file.')
     parser.add_argument('--gpus', default="0,1", type=str, help='GPU devices to use (0-7) (default: 0,1)')
+    parser.add_argument('--debug', action='store_true')
+
     
     args = parser.parse_args()
     
@@ -39,16 +41,17 @@ def main():
 
     loss, acc1, acc5 = pipeline.run_pipeline()
 
-    # Save history results
-    if not os.path.exists(config.PATHS.RESULTS_PATH):
-        os.makedirs(config.PATHS.RESULTS_PATH)
-        
-    np.save(config.PATHS.RESULTS_PATH + 'loss.npy', loss)
-    np.save(config.PATHS.RESULTS_PATH + 'accuracy.npy', acc1)
+    if not args.debug:
+        # Save history results
+        if not os.path.exists(config.PATHS.RESULTS_PATH):
+            os.makedirs(config.PATHS.RESULTS_PATH)
 
-    # Log best results
-    logManager = Logger(config.LOGGER, config.TYPE, args.config)
-    logManager.update((loss, acc1, acc5))
+        np.save(config.PATHS.RESULTS_PATH + 'loss.npy', loss)
+        np.save(config.PATHS.RESULTS_PATH + 'accuracy.npy', acc1)
+
+        # Log best results
+        logManager = Logger(config.LOGGER, config.TYPE, args.config)
+        logManager.update((loss, acc1, acc5))
 
 if __name__ == "__main__":
     main()

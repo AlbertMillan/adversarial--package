@@ -6,7 +6,6 @@ import sys
 from ..utils import MetricTracker
 from ..attack.dataset import TORCH_CIFAR10, TORCH_CIFAR100
 from .step_manager import RawStep, AdvStep, MixedStep, AdvHGDStep, MixedHGDStep
-from .step_manager import StepManager, DefenseStep
 
 
 class ConfigManager(metaclass=ABCMeta):
@@ -15,10 +14,6 @@ class ConfigManager(metaclass=ABCMeta):
         'CIFAR100': TORCH_CIFAR100
     }
 
-    # _stepDict = {
-    #     'ATTACK':
-    # }
-
     _stepDict = {
         'RAW': RawStep,
         'ADV': AdvStep,
@@ -26,13 +21,6 @@ class ConfigManager(metaclass=ABCMeta):
         'ADV_HGD': AdvHGDStep,
         'BOTH_HGD': MixedHGDStep
     }
-    # _stepDict = {
-    #     'RAW': RawStep,
-    #     'ADV': AdvStep,
-    #     'BOTH': MixedStep,
-    #     'ADV_HGD': AdvHGDStep,
-    #     'BOTH_HGD': MixedHGDStep
-    # }
 
     @abstractmethod
     def setDataset(self, arg):
@@ -45,32 +33,31 @@ class ConfigManager(metaclass=ABCMeta):
         raise NotImplementedError
 
     @staticmethod
-    def computeEpoch(batch_loader, stepManager, print_freq):
+    def computeEpoch(batch_loader, stepManager, print_freq, is_training):
         for i, (x, y) in enumerate(batch_loader):
 
             x = x.cuda()
             y = y.cuda()
 
             # Performs a step in the training procedure
-            stepManager.takeTime()
+            stepManager.tracker.takeTime()
             stepManager.step(x, y)
-            stepManager.takeTime()
+            stepManager.tracker.takeTime()
 
             if i % print_freq == 0:
-                print(stepManager.log(i, len(batch_loader)))
+                print(stepManager.tracker.log(i, len(batch_loader), is_training))
 
         print(' * Prec@1 {top1.avg:.3f}'.format(top1=stepManager.top1))
-        return stepManager.lossMeter.avg, stepManager.top1.avg, stepManager.top5.avg
+        return stepManager.tracker.lossMeter.avg, stepManager.tracker.top1.avg, stepManager.tracker.top5.avg
 
 
 class AttackManager(ConfigManager):
 
     def __init__(self, config):
-        # super().__init__(config)
         dataset = self.setDataset(config.DATASET)
         target_data = (dataset.train_data if config.DATASET.TRAIN else dataset.test_data)
         self.batch_loader = DataLoader(target_data, batch_size=config.HYPERPARAMETERS.BATCH_SIZE)
-        self.stepManager = self.setStep(config.ATTACK, config.MODELS)
+        self.stepManager = self.setStep(config.ATTACK, config.MODELS, config.HYPERPARAMETERS.EPOCHS)
         self.paths = config.PATHS
         self.print_freq = config.HYPERPARAMETERS.PRINT_FREQ
 
@@ -85,9 +72,9 @@ class AttackManager(ConfigManager):
     # def setStep(self, att_cfg, model_cfg):
     #     return StepManager(att_cfg, model_cfg)
 
-    def setStep(self, att_cfg, model_cfg):
+    def setStep(self, att_cfg, model_cfg, max_iter):
         try:
-            return self._stepDict[att_cfg.STEP](att_cfg, model_cfg)
+            return self._stepDict[att_cfg.STEP](att_cfg, model_cfg, max_iter)
         except AttributeError as err:
             print('Error: Undefined variable in setStep {0}'.format(self.__class__.__name__))
             print(err)
@@ -95,7 +82,8 @@ class AttackManager(ConfigManager):
 
     def run_pipeline(self):
         self.stepManager.threat_model.model.eval()
-        self.computeEpoch(self.batch_loader, self.stepManager, self.print_freq)
+        return self.computeEpoch(self.batch_loader, self.stepManager, self.print_freq,
+                                 self.stepManager.threat_model.model.training)
 
 
 class DefenseManager(ConfigManager):
@@ -104,10 +92,11 @@ class DefenseManager(ConfigManager):
         dataset = self.setDataset(config.DATASET)
         self.train_loader = DataLoader(dataset.train_data, batch_size=config.HYPERPARAMETERS.BATCH_SIZE)
         self.test_loader = DataLoader(dataset.test_data, batch_size=config.HYPERPARAMETERS.BATCH_SIZE)
-        self.stepManager = self.setStep(config.ATTACK, config.MODELS, config.HYPERPARAMETERS.OPTIM)
+        self.stepManager = self.setStep(config.ATTACK, config.MODELS, config.HYPERPARAMETERS.EPOCHS)
         self.paths = config.PATHS
 
         # Hyperparameters configuration
+        self.stepManager.setOptimizer(config.HYPERPARAMETERS.OPTIM)
         self.iterations = config.HYPERPARAMETERS.EPOCHS
         self.print_freq = config.HYPERPARAMETERS.PRINT_FREQ
 
@@ -122,11 +111,9 @@ class DefenseManager(ConfigManager):
             print(err)
             sys.exit(1)
 
-    # def setStep(self, ):
-
-    def setStep(self, att_cfg, model_cfg, hyperparam_cfg):
+    def setStep(self, att_cfg, model_cfg, max_iter):
         try:
-            return self._stepDict[att_cfg.STEP](att_cfg, model_cfg, hyperparam_cfg)
+            return self._stepDict[att_cfg.STEP](att_cfg, model_cfg, max_iter)
         except AttributeError as err:
             print('Error: Undefined variable in setStep {0}'.format(self.__class__.__name__))
             print(err)
@@ -138,20 +125,22 @@ class DefenseManager(ConfigManager):
         best_pred = 0.0
 
         for epoch in range(self.iterations):
-            self.stepManager.restart()
+            self.stepManager.tracker.setEpoch(epoch)
+            self.stepManager.tracker.restart()
             self.stepManager.threat_model.model.train()
 
-            self.computeEpoch(self.train_loader, self.stepManager, self.print_freq)
+            self.computeEpoch(self.train_loader, self.stepManager, self.print_freq,
+                              self.stepManager.threat_model.model.training)
 
-            self.train_metrics.update(self.stepManager.lossMeter.avg,
-                                      self.stepManager.top1.avg,
-                                      self.stepManager.top5.avg)
+            self.train_metrics.update(self.stepManager.tracker.lossMeter.avg,
+                                      self.stepManager.tracker.top1.avg,
+                                      self.stepManager.tracker.top5.avg)
 
             # Account for step performed on scheduler...
             self.stepManager.optimManager.schedulerStep()
 
             # Evaluation on test data
-            self.stepManager.restart()
+            self.stepManager.tracker.restart()
             test_loss, test_acc1, test_acc5 = self.eval()
             self.test_metrics.update(test_loss, test_acc1, test_acc5)
 
@@ -160,9 +149,10 @@ class DefenseManager(ConfigManager):
                 self.stepManager.threat_model.save_model(self.paths.SAVE_DIR, self.paths.SAVE_NAME)
 
         # print(' * Prec@1 {top1.avg:.3f}'.format(top1=self.stepManager.top1))
-        return self.stepManager.lossMeter.avg, self.stepManager.top1.avg, self.stepManager.top5.avg
+        return self.stepManager.tracker.lossMeter.avg, self.stepManager.tracker.top1.avg, self.stepManager.tracker.top5.avg
 
 
     def eval(self):
         self.stepManager.threat_model.model.eval()
-        return self.computeEpoch(self.test_loader, self.stepManager, self.print_freq)
+        return self.computeEpoch(self.test_loader, self.stepManager, self.print_freq,
+                                 self.stepManager.threat_model.model.training)

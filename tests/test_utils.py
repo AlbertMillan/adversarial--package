@@ -28,6 +28,9 @@ class UtilsTester(unittest.TestCase):
             last_line = lines[-1]
             self.assertEqual(last_line, 'TYPE: DEFENSE \t CONFIG: tests/utils.test.yaml \t LOSS: 0.121 \t TOP1: 0.313 \t TOP5: 0.515')
 
+    def testAccuracy(self):
+
+
 
 if __name__ == '__main__':
     unittest.main()

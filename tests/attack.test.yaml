@@ -11,7 +11,7 @@ ATTACK:
     MIN_VAL: 4
     MAX_VAL: 16
   ALPHA:
-    TYPE: 'CONSTANT'
+    TYPE: 'DIVISOR'
     DIVISOR: 1
   INIT:
     TYPE: 'RAW'

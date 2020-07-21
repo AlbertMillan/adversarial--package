@@ -55,7 +55,7 @@ class GradientAttackTester(unittest.TestCase):
         ''' Ensures correct Alpha subclass is called based on parameter configuration.'''
         config = copy.deepcopy(self._config)
         alpha_type = {
-            'CONSTANT': attack.DivisorAlpha,
+            'DIVISOR': attack.DivisorAlpha,
         }
 
         for (alpha, cls) in alpha_type.items():
