@@ -47,7 +47,7 @@ class ConfigManager(metaclass=ABCMeta):
             if i % print_freq == 0:
                 print(stepManager.tracker.log(i, len(batch_loader), is_training))
 
-        print(' * Prec@1 {top1.avg:.3f}'.format(top1=stepManager.top1))
+        print(' * Prec@1 {top1.avg:.3f}'.format(top1=stepManager.tracker.top1))
         return stepManager.tracker.lossMeter.avg, stepManager.tracker.top1.avg, stepManager.tracker.top5.avg
 
 
@@ -57,7 +57,7 @@ class AttackManager(ConfigManager):
         dataset = self.setDataset(config.DATASET)
         target_data = (dataset.train_data if config.DATASET.TRAIN else dataset.test_data)
         self.batch_loader = DataLoader(target_data, batch_size=config.HYPERPARAMETERS.BATCH_SIZE)
-        self.stepManager = self.setStep(config.ATTACK, config.MODELS, config.HYPERPARAMETERS.EPOCHS)
+        self.stepManager = self.setStep(config.ATTACK, config.MODELS, None)
         self.paths = config.PATHS
         self.print_freq = config.HYPERPARAMETERS.PRINT_FREQ
 

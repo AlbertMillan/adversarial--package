@@ -1,6 +1,8 @@
 from abc import ABCMeta, abstractmethod
 import time
 
+import torch
+
 from ..attack.attacker import IFGSM, MIM
 from ..defense.optim import SGD, ADAM
 from ..loader.model import ModelManager
@@ -68,7 +70,7 @@ class RawStep(StepManager):
 
     def trainStep(self, x_batch, y_batch):
         ''' Computes performance based raw data only.'''
-        logits = self.threat_model.forward(x_batch)
+        logits, _ = self.threat_model.forward(x_batch)
         loss = self.threat_model.loss(logits, y_batch)
 
         loss.backward()

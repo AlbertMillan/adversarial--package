@@ -42,21 +42,11 @@ class FullDenoiser(nn.Module):
     def __init__(self, target_model, n=1, hard_mining=0, loss_norm=False):
         super(FullDenoiser, self).__init__()
 
-        # self.training = True
-
         # 1. Load Models
         self.target_model = target_model
         self.denoiser = Denoiser(x_h=32, x_w=32)
 
         self.crossEntropy = nn.CrossEntropyLoss()
-
-    # def _no_grad_step(self, x_batch):
-    #     """ Performs a step during testing."""
-    #     logits = None
-    #     with torch.no_grad():
-    #         logits = self.target_model(x_batch)
-    #
-    #     return logits
 
     def forward(self, x_adv, x=None):
         # 1. Compute denoised image. Need to check this...

@@ -24,7 +24,7 @@ DATASET:
     
 ATTACK:
     NAME: 'PGD'
-    STEP: 'BOTH_DEF'
+    STEP: 'BOTH'
     MAX_ITER: 7
     EPSILON:
         TYPE: 'FIXED'

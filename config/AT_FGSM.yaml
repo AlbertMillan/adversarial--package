@@ -46,6 +46,11 @@ MODELS:
     PARALLEL: TRUE
     PRETRAINED: FALSE
     CHKPT_PATH: null
+    LOSS:
+      NAME: 'MMC'
+      CLASSES: 10
+      C_MM: 1
+
 
   # Model used to generate adversarial examples (ATTACK model)
   ADV_MODEL:
@@ -56,6 +61,9 @@ MODELS:
     PARALLEL: TRUE
     PRETRAINED: TRUE
     CHKPT_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
+    LOSS:
+      NAME: 'SCE'
+      CLASSES: 10
 
 PATHS:
   SAVE_DIR: 'chkpt/fgsm/'

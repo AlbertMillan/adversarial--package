@@ -1,3 +1,2 @@
-from .wideresnet import WideResNet
+from .wideresnet import WideResNet, WideResNetMMCL
 from .fulldenoiser import FullDenoiser
-# from .fullmodel import FullDenoiser

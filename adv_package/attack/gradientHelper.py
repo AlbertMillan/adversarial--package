@@ -71,7 +71,7 @@ class FixedAlpha(AlphaManager):
     def __init__(self, alpha_cfg):
         self.alpha = alpha_cfg.VALUE
 
-    def getAlpha(self):
+    def getAlpha(self, *args):
         return self.alpha / 255.
 
 class DivisorAlpha(AlphaManager):

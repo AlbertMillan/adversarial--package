@@ -1,4 +1,4 @@
-from .models import WideResNet, FullDenoiser
+from .models import WideResNet, WideResNetMMCL, FullDenoiser
 
 from abc import ABCMeta, abstractmethod
 import torch
@@ -58,7 +58,7 @@ class Model(metaclass=ABCMeta):
         if not os.path.exists(directory):
             os.makedirs(directory)
         save_path = save_dir + file_name
-        torch.save(state, file_name)
+        torch.save(state, save_path)
 
 class StandardModel(Model, metaclass=ABCMeta):
 
@@ -148,9 +148,14 @@ class WrapperResNet(StandardModel):
 
 class WrapperWideResNet(StandardModel):
     # Maybe I can train the models, store them online, and download the model from some site...
+    _modelDict = {
+        'SCE': WideResNet,
+        'MMC': WideResNetMMCL
+    }
+
     def __init__(self, model_cfg):
         try:
-            temp_model = WideResNet(model_cfg.DEPTH, 10, model_cfg.WIDEN_FACTOR, model_cfg.DROP_RATE)
+            temp_model = self.set_model(model_cfg)
             self.model = self._load_model(temp_model, model_cfg.CHKPT_PATH, model_cfg.PARALLEL)
             self.parallel = model_cfg.PARALLEL
             # self.save_dir = model_cfg.SAVE_CFG.SAVE_DIR
@@ -159,6 +164,9 @@ class WrapperWideResNet(StandardModel):
             print('Error: Undefined variable in constructor {0}'.format(self.__class__.__name__))
             print(err)
             sys.exit(1)
+
+    def set_model(self, model_cfg):
+        return self._modelDict[model_cfg.LOSS.NAME](model_cfg)
 
     def _load_model(self, model, load_path, parallel):
         return super()._load_model(model, load_path, parallel)

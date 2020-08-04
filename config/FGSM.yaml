@@ -15,14 +15,14 @@ DATASET:
 ATTACK:
     NAME: "PGD"
     STEP: 'ADV'
-    MAX_ITER: 10
+    MAX_ITER: 1
     MOMENTUM: 0
     EPSILON:
         TYPE: 'FIXED'
-        VALUE: 4
+        VALUE: 8
     ALPHA:
         TYPE: 'DIVISOR'
-        DIVISOR: 10
+        DIVISOR: 1
     INIT:
         TYPE: 'RAW'
 
@@ -37,7 +37,12 @@ MODELS:
         PARALLEL: TRUE
         PRETRAINED: TRUE
         CHKPT_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
-    
+        LOSS:
+            NAME: 'MMC'
+            FEAT_SPACE: 640
+            CLASSES: 10
+            C_MM: 1
+
     # Model we are trying to fool
     THREAT_MODEL:
         NAME: "WideResNet"
@@ -47,7 +52,12 @@ MODELS:
         PARALLEL: TRUE
         PRETRAINED: TRUE
         CHKPT_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
+        LOSS:
+            NAME: 'MMC'
+            CLASSES: 10
+            FEAT_SPACE: 640
+            C_MM: 1
 
 PATHS:
-    RESULTS: 'results/'
+    RESULTS_PATH: 'results/'
 
