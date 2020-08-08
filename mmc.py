@@ -15,15 +15,15 @@ def load_config(config_path):
     return config
 
 # hyperparameters
+os.environ["CUDA_VISIBLE_DEVICES"] = '1,2'
 model = ModelManager(load_config('test.yaml').THREAT_MODEL)
 model = model.getModel()
 iterations = 200
 lr = 0.01
-os.environ["CUDA_VISIBLE_DEVICES"] = '1,3'
 
 
 train_data = CIFAR10('datasets/', train=True, transform=transforms.ToTensor(), download=False)
-batch_loader = DataLoader(train_data, batch_size=64)
+batch_loader = DataLoader(train_data, batch_size=50)
 
 optim = optim.SGD(model.parameters,
                   lr=0.01,
