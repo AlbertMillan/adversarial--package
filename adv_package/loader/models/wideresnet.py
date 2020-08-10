@@ -106,97 +106,97 @@ class WideResNet(nn.Module):
         return self.crossEntropy(logits, y)
 
 
-class WideResNetMMCL(nn.Module):
-
-    def __init__(self, model_cfg):
-        super(WideResNetMMCL, self).__init__()
-        self.register_buffer('graph', None)
-        depth = model_cfg.DEPTH
-        num_classes = model_cfg.LOSS.CLASSES
-        widen_factor = model_cfg.WIDEN_FACTOR
-        dropRate = model_cfg.DROP_RATE
-
-        nChannels = [16, 16 * widen_factor, 32 * widen_factor, 64 * widen_factor]
-        assert ((depth - 4) % 6 == 0)
-        n = (depth - 4) / 6
-        block = BasicBlock
-        # 1st conv before any network block
-        self.conv1 = nn.Conv2d(3, nChannels[0], kernel_size=3, stride=1,
-                               padding=1, bias=False)
-        # 1st block
-        self.block1 = NetworkBlock(n, nChannels[0], nChannels[1], block, 1, dropRate)
-        # 2nd block
-        self.block2 = NetworkBlock(n, nChannels[1], nChannels[2], block, 2, dropRate)
-        # 3rd block
-        self.block3 = NetworkBlock(n, nChannels[2], nChannels[3], block, 2, dropRate)
-        # global average pooling and classifier
-        self.bn1 = nn.BatchNorm2d(nChannels[3])
-        self.relu = nn.ReLU(inplace=True)
-        self.fc = nn.Linear(nChannels[3], num_classes)
-
-        self.nChannels = nChannels[3]
-        self.nClasses = num_classes
-        means = self.centers(model_cfg.LOSS.C_MM, self.nClasses, self.nChannels)
-        self.register_buffer('means', means)
-
-
-        self.crossEntropy = nn.CrossEntropyLoss()
-
-        self._init_weights()
-
-    def _init_weights(self):
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
-            elif isinstance(m, nn.BatchNorm2d):
-                m.weight.data.fill_(1)
-                m.bias.data.zero_()
-            elif isinstance(m, nn.Linear):
-                m.bias.data.zero_()
-
-    @staticmethod
-    def centers(c_mm, n_classes, d):
-        out = torch.zeros((n_classes, d))
-        out[0, 0] = 1
-
-        for i in range(1, n_classes):
-
-            for j in range(0, i):
-                # print(out[i])
-                # print(out[j])
-                # sup = torch.dot(out[i], out[j])
-                out[i, j] = -(1 / (n_classes - 1) + torch.dot(out[i], out[j])) / out[j, j]
-
-            # sup_ =
-            out[i, i] = torch.sqrt( torch.abs(1 - torch.norm(out[i])**2) )
-
-        out *= c_mm
-        return out * 10
-
-    def forward(self, x):
-        out = self.conv1(x)
-        out = self.block1(out)
-        out = self.block2(out)
-        out = self.block3(out)
-        out = self.relu(self.bn1(out))
-        out = F.avg_pool2d(out, 8)
-        out = out.view(-1, self.nChannels)
-
-        # Max-mahalanobis center logits
-        x_expand = torch.unsqueeze(out, dim=1).repeat((1, self.nClasses, 1))
-        # mean_expand = torch.unsqueeze(self.centers())
-        mean_expand = torch.unsqueeze(self.means, dim=0)
-        sup = (x_expand - mean_expand)**2
-        logits = -torch.sum( sup, dim=-1)
-        return logits
-
-    def loss(self, logits, y):
-        # TODO: LOSS function used?
-        y_true = torch.zeros((y.size(0), self.nClasses)).cuda()
-        y_true[np.arange(0, y.size(0)), y] = -1
-        loss = torch.sum(logits * y_true, dim=1)
-        final_loss = torch.mean(loss)
-        return final_loss
+# class WideResNetMMCL(nn.Module):
+#
+#     def __init__(self, model_cfg):
+#         super(WideResNetMMCL, self).__init__()
+#         self.register_buffer('graph', None)
+#         depth = model_cfg.DEPTH
+#         num_classes = model_cfg.LOSS.CLASSES
+#         widen_factor = model_cfg.WIDEN_FACTOR
+#         dropRate = model_cfg.DROP_RATE
+#
+#         nChannels = [16, 16 * widen_factor, 32 * widen_factor, 64 * widen_factor]
+#         assert ((depth - 4) % 6 == 0)
+#         n = (depth - 4) / 6
+#         block = BasicBlock
+#         # 1st conv before any network block
+#         self.conv1 = nn.Conv2d(3, nChannels[0], kernel_size=3, stride=1,
+#                                padding=1, bias=False)
+#         # 1st block
+#         self.block1 = NetworkBlock(n, nChannels[0], nChannels[1], block, 1, dropRate)
+#         # 2nd block
+#         self.block2 = NetworkBlock(n, nChannels[1], nChannels[2], block, 2, dropRate)
+#         # 3rd block
+#         self.block3 = NetworkBlock(n, nChannels[2], nChannels[3], block, 2, dropRate)
+#         # global average pooling and classifier
+#         self.bn1 = nn.BatchNorm2d(nChannels[3])
+#         self.relu = nn.ReLU(inplace=True)
+#         self.fc = nn.Linear(nChannels[3], num_classes)
+#
+#         self.nChannels = nChannels[3]
+#         self.nClasses = num_classes
+#         means = self.centers(model_cfg.LOSS.C_MM, self.nClasses, self.nChannels)
+#         self.register_buffer('means', means)
+#
+#
+#         self.crossEntropy = nn.CrossEntropyLoss()
+#
+#         self._init_weights()
+#
+#     def _init_weights(self):
+#         for m in self.modules():
+#             if isinstance(m, nn.Conv2d):
+#                 nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+#             elif isinstance(m, nn.BatchNorm2d):
+#                 m.weight.data.fill_(1)
+#                 m.bias.data.zero_()
+#             elif isinstance(m, nn.Linear):
+#                 m.bias.data.zero_()
+#
+#     @staticmethod
+#     def centers(c_mm, n_classes, d):
+#         out = torch.zeros((n_classes, d))
+#         out[0, 0] = 1
+#
+#         for i in range(1, n_classes):
+#
+#             for j in range(0, i):
+#                 # print(out[i])
+#                 # print(out[j])
+#                 # sup = torch.dot(out[i], out[j])
+#                 out[i, j] = -(1 / (n_classes - 1) + torch.dot(out[i], out[j])) / out[j, j]
+#
+#             # sup_ =
+#             out[i, i] = torch.sqrt( torch.abs(1 - torch.norm(out[i])**2) )
+#
+#         out *= c_mm
+#         return out * 10
+#
+#     def forward(self, x):
+#         out = self.conv1(x)
+#         out = self.block1(out)
+#         out = self.block2(out)
+#         out = self.block3(out)
+#         out = self.relu(self.bn1(out))
+#         out = F.avg_pool2d(out, 8)
+#         out = out.view(-1, self.nChannels)
+#
+#         # Max-mahalanobis center logits
+#         x_expand = torch.unsqueeze(out, dim=1).repeat((1, self.nClasses, 1))
+#         # mean_expand = torch.unsqueeze(self.centers())
+#         mean_expand = torch.unsqueeze(self.means, dim=0)
+#         sup = (x_expand - mean_expand)**2
+#         logits = -torch.sum( sup, dim=-1)
+#         return logits
+#
+#     def loss(self, logits, y):
+#         # TODO: LOSS function used?
+#         y_true = torch.zeros((y.size(0), self.nClasses)).cuda()
+#         y_true[np.arange(0, y.size(0)), y] = -1
+#         loss = torch.sum(logits * y_true, dim=1)
+#         final_loss = torch.mean(loss)
+#         return final_loss
 
         # y_pred = torch.argmax(logits, dim=1)
         # return torch.sum(logits * y_true) / y.size(0)

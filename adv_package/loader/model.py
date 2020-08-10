@@ -1,4 +1,4 @@
-from .models import WideResNet, WideResNetMMCL, FullDenoiser
+from .models import WideResNet, FullDenoiser, create_mmc_object
 
 from abc import ABCMeta, abstractmethod
 import torch
@@ -34,7 +34,7 @@ class Model(metaclass=ABCMeta):
         # Load checkpoint
         if load_path:
             model = Model._load_checkpoint(model, load_path)
-        #             print(">>> LOADING PRE-TRAINED MODEL:", load_path)
+            print(">>> LOADING PRE-TRAINED MODEL:", load_path)
 
         return model
 
@@ -150,11 +150,16 @@ class WrapperWideResNet(StandardModel):
     # Maybe I can train the models, store them online, and download the model from some site...
     _modelDict = {
         'SCE': WideResNet,
-        'MMC': WideResNetMMCL
+        'MMC': create_mmc_object(WideResNet),
     }
 
     def __init__(self, model_cfg):
         try:
+            # if model_cfg.LOSS.NAME == 'MMC':
+            #     mmc_wrapper = create_mmc_object(WideResNet)
+            #     temp_model = mmc_wrapper(model_cfg)
+            # elif model_cfg.LOSS.NAME == 'SCE':
+            #     temp_model = WideResNet(model_cfg)
             temp_model = self.set_model(model_cfg)
             self.model = self._load_model(temp_model, model_cfg.CHKPT_PATH, model_cfg.PARALLEL)
             self.parallel = model_cfg.PARALLEL
