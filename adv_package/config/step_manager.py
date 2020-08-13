@@ -70,7 +70,7 @@ class RawStep(StepManager):
 
     def trainStep(self, x_batch, y_batch):
         ''' Computes performance based raw data only.'''
-        logits, _ = self.threat_model.forward(x_batch)
+        logits = self.threat_model.forward(x_batch)
         loss = self.threat_model.loss(logits, y_batch)
 
         loss.backward()

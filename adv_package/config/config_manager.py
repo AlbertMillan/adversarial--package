@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from torch.utils.data import DataLoader
 from torch import optim
+from torchsummary import summary
 import sys
 
 from ..utils import MetricTracker
@@ -69,9 +70,6 @@ class AttackManager(ConfigManager):
             print(err)
             sys.exit(1)
 
-    # def setStep(self, att_cfg, model_cfg):
-    #     return StepManager(att_cfg, model_cfg)
-
     def setStep(self, att_cfg, model_cfg, max_iter):
         try:
             return self._stepDict[att_cfg.STEP](att_cfg, model_cfg, max_iter)
@@ -123,8 +121,6 @@ class DefenseManager(ConfigManager):
         # TODO: Add testing on each iteration of the model.
 
         best_pred = 0.0
-
-        print(self.stepManager.threat_model.model.summary())
 
         for epoch in range(self.iterations):
             self.stepManager.tracker.setEpoch(epoch)

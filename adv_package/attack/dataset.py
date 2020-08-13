@@ -82,7 +82,9 @@ class TORCH_CIFAR10(Dataset):
         
         # Retrieve train data to compute mean and std
         train_data = CIFAR10(ds_path, train=True, transform=self.scale(), download=True)
-        self.mean, self.std = self.compute_stats(train_data)
+#         self.mean, self.std = self.compute_stats(train_data)
+        self.mean = torch.FloatTensor([0.4914, 0.4822, 0.4465])
+        self.std = torch.FloatTensor([0.2023, 0.1994, 0.2010])
         
         print(">>> Dataset Mean:", self.mean.data)
         print(">>> Dataset Std:", self.std.data)

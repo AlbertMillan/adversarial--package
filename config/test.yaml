@@ -43,9 +43,12 @@ MODELS:
     DEPTH: 28
     WIDEN_FACTOR: 10
     DROP_RATE: 0
-    PARALLEL: TRUE
+    PARALLEL: FALSE
     PRETRAINED: FALSE
     CHKPT_PATH: null
+    ACTIVATION:
+      NAME: 'ReLU'
+      GAMMA: 0.1
     LOSS:
       NAME: 'MMC'
       CLASSES: 10
@@ -61,6 +64,8 @@ MODELS:
     PARALLEL: TRUE
     PRETRAINED: TRUE
     CHKPT_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
+    ACTIVATION:
+      NAME: 'ReLU'
     LOSS:
       NAME: 'SCE'
       CLASSES: 10
