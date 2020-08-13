@@ -124,6 +124,8 @@ class DefenseManager(ConfigManager):
 
         best_pred = 0.0
 
+        print(self.stepManager.threat_model.model.summary())
+
         for epoch in range(self.iterations):
             self.stepManager.tracker.setEpoch(epoch)
             self.stepManager.tracker.restart()

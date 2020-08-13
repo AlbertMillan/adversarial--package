@@ -28,6 +28,7 @@ def create_mmc_object(class_object):
             return out
 
         def forward(self, x):
+            # TODO: Move this out to the model and call the parent function.
             out = self.conv1(x)
             out = self.block1(out)
             out = self.block2(out)

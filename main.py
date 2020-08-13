@@ -43,11 +43,11 @@ def main():
 
     if not args.debug:
         # Save history results
-        if not os.path.exists(config.PATHS.RESULTS_PATH):
-            os.makedirs(config.PATHS.RESULTS_PATH)
+        if not os.path.exists(config.PATHS.RESULTS):
+            os.makedirs(config.PATHS.RESULTS)
 
-        np.save(config.PATHS.RESULTS_PATH + 'loss.npy', loss)
-        np.save(config.PATHS.RESULTS_PATH + 'accuracy.npy', acc1)
+        np.save(config.PATHS.RESULTS + 'loss.npy', loss)
+        np.save(config.PATHS.RESULTS + 'accuracy.npy', acc1)
 
         # Log best results
         logManager = Logger(config.LOGGER, config.TYPE, args.config)

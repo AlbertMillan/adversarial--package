@@ -66,7 +66,7 @@ MODELS:
       CLASSES: 10
 
 PATHS:
-  SAVE_DIR: 'chkpt/ifgsm_mmc_208/'
+  SAVE_DIR: 'chkpt/test/'
   SAVE_NAME: 'model_best.pth.tar'
   RESULTS: 'results/'
 
