@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-import time
+import time, sys
 
 import torch
 
@@ -139,6 +139,50 @@ class MixedStep(StepManager):
         loss = self.threat_model.loss(logits, y_batch)
 
         self.tracker.store(logits, loss, y_batch)
+        
+
+class RatioStep(StepManager):
+    
+    def __init__(self, att_cfg, model_cfg, max_iter):
+        super().__init__(att_cfg, model_cfg, max_iter)
+        self.r = att_cfg.RATIO
+        print('In Ratio Step')
+    
+    def trainStep(self, x_batch, y_batch):
+        x_adv = self.attack.run(x_batch, y_batch)
+        
+        adv_logits = self.threat_model.forward(x_adv)
+        adv_loss = self.threat_model.loss(adv_logits, y_batch)
+        
+        raw_logits = self.threat_model.forward(x_batch)
+        raw_loss = self.threat_model.loss(raw_logits, y_batch)
+        
+        loss = self.r * raw_loss + (1. - self.r) * adv_loss
+        loss.backward()
+        
+        # Append logits and predictions from one tensor with the other.
+        total_logits = torch.cat((raw_logits, adv_logits), 0)
+        total_y = torch.cat((y_batch, y_batch), 0)
+        
+        
+        self.tracker.store(total_logits, loss, total_y)
+        self.optimManager.step()
+        
+        
+    def testStep(self, x_batch, y_batch):
+        ''' Computes peformance based on raw and adv data.'''
+        logits = self.threat_model.forward(x_batch)
+        loss = self.threat_model.loss(logits, y_batch)
+
+        self.tracker.store(logits, loss, y_batch)
+
+        x_adv = self.attack.run(x_batch, y_batch)
+        logits = self.threat_model.forward(x_adv)
+        loss = self.threat_model.loss(logits, y_batch)
+
+        self.tracker.store(logits, loss, y_batch)
+        
+        
 
 class AdvHGDStep(StepManager):
     ''' There is a difference on how the loss is computed during training and testing procedure.'''
