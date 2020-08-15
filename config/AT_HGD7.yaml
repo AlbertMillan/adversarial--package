@@ -22,7 +22,7 @@ DATASET:
     
 ATTACK:
     NAME: 'PGD'
-    STEP: 'BOTH_HGD'
+    STEP: 'ADV_HGD'
     MAX_ITER: 7
     MOMENTUM: null
     # [CONSTANT(4), DYNAMIC(MAX_ITER), RANDOM_RANGE]
@@ -54,6 +54,12 @@ MODELS:
             PARALLEL: TRUE
             PRETRAINED: TRUE
             CHKPT_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
+            ACTIVATION:
+                NAME: 'ReLU'
+            LOSS:
+                NAME: 'SCE'
+                CLASSES: 10
+                REDUCTION: 'mean'
     
     # Model we are trying to fool
     ADV_MODEL:
@@ -64,6 +70,12 @@ MODELS:
         PARALLEL: TRUE
         PRETRAINED: TRUE
         CHKPT_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
+        ACTIVATION:
+            NAME: 'ReLU'
+        LOSS:
+            NAME: 'SCE'
+            CLASSES: 10
+            REDUCTION: 'mean'
 
     
 PATHS:

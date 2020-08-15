@@ -79,7 +79,7 @@ class WideResNet(nn.Module):
 
         # self.logitsLayer = self.set_logits_layer(model_cfg.LOSS)
         
-        self.crossEntropy = nn.CrossEntropyLoss()
+        self.crossEntropy = nn.CrossEntropyLoss(reduction=model_cfg.LOSS.REDUCTION)
 
         self._init_weights()
 

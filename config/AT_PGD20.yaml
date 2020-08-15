@@ -46,6 +46,12 @@ MODELS:
     PARALLEL: TRUE
     PRETRAINED: FALSE
     CHKPT_PATH: null
+    ACTIVATION:
+      NAME: 'ReLU'
+    LOSS:
+      NAME: 'SCE'
+      CLASSES: 10
+      REDUCTION: 'mean'
 
   # Model used to generate adversarial examples (ATTACK model)
   ADV_MODEL:
@@ -56,8 +62,18 @@ MODELS:
     PARALLEL: TRUE
     PRETRAINED: TRUE
     CHKPT_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
+    ACTIVATION:
+      NAME: 'ReLU'
+    LOSS:
+      NAME: 'SCE'
+      CLASSES: 10
+      REDUCTION: 'mean'
 
 PATHS:
   SAVE_DIR: 'chkpt/pgd_madry208/'
   SAVE_NAME: 'model_best.pth.tar'
   RESULTS: 'results/'
+  
+LOGGER:
+  DIR: ''
+  FILE: 'experiments.txt'

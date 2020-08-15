@@ -145,8 +145,7 @@ class RatioStep(StepManager):
     
     def __init__(self, att_cfg, model_cfg, max_iter):
         super().__init__(att_cfg, model_cfg, max_iter)
-        self.r = att_cfg.RATIO
-        print('In Ratio Step')
+        self.r = att_cfg.WEIGHT
     
     def trainStep(self, x_batch, y_batch):
         x_adv = self.attack.run(x_batch, y_batch)
@@ -166,6 +165,62 @@ class RatioStep(StepManager):
         
         
         self.tracker.store(total_logits, loss, total_y)
+        self.optimManager.step()
+        
+        
+    def testStep(self, x_batch, y_batch):
+        ''' Computes peformance based on raw and adv data.'''
+        logits = self.threat_model.forward(x_batch)
+        loss = self.threat_model.loss(logits, y_batch)
+
+        self.tracker.store(logits, loss, y_batch)
+
+        x_adv = self.attack.run(x_batch, y_batch)
+        logits = self.threat_model.forward(x_adv)
+        loss = self.threat_model.loss(logits, y_batch)
+
+        self.tracker.store(logits, loss, y_batch)
+        
+        
+class RandomStep(StepManager):
+    
+    def __init__(self, att_cfg, model_cfg, max_iter):
+        super().__init__(att_cfg, model_cfg, max_iter)
+        print(att_cfg)
+        self.lamda = att_cfg.WEIGHT
+        self.ratio = att_cfg.ADV_RATE
+        
+    def trainStep(self, x_batch, y_batch):
+        
+        # Compute indices of adversarial elements
+        n_adv = int(x_batch.size(0) * self.ratio)
+        idx = torch.randperm(x_batch.size(0))
+        adv_idx = idx[:n_adv]
+        raw_idx = idx[n_adv:]
+        
+        # Compute indices of ouput
+        x_adv = x_batch[adv_idx]
+        x_raw = x_batch[raw_idx]
+        y_adv = y_batch[adv_idx]
+        y_raw = y_batch[raw_idx]
+        
+        
+        # Compute Adversarial Examples
+        xn_adv = self.attack.run(x_adv, y_adv)
+               
+        # Concatenate adversarial vector and non-adversarial
+        x_joint = torch.cat((xn_adv, x_raw), 0)
+        y_joint = torch.cat((y_adv, y_raw), 0)
+        
+        logits = self.threat_model.forward(x_joint)
+        persample_loss = self.threat_model.loss(logits, y_joint)
+        adv_loss = torch.sum(persample_loss[:n_adv])
+        clean_loss = torch.sum(persample_loss[n_adv:])
+        
+        loss = (clean_loss + self.lamda * adv_loss) / (x_batch.size(0) - n_adv + self.lamda * n_adv)
+        loss.backward()
+        
+        self.tracker.store(logits, loss, y_joint)
         self.optimManager.step()
         
         

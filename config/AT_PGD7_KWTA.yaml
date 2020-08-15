@@ -5,7 +5,7 @@ HYPERPARAMETERS:
   EPOCHS: 76
   OPTIM:
     NAME: 'SGD'
-    LEARNING_RATE: 0.01
+    LEARNING_RATE: 0.1
     MOMENTUM: 0.9
     NESTEROV: TRUE
     WEIGHT_DECAY: 0.0002
@@ -24,18 +24,16 @@ DATASET:
 
 ATTACK:
   NAME: 'PGD'
-  STEP: 'RANDOM'
-  WEIGHT: 0.3
-  ADV_RATE: 0.5
+  STEP: 'BOTH'
   MAX_ITER: 7
   EPSILON:
     TYPE: 'FIXED'
     VALUE: 8
   ALPHA:
     TYPE: 'FIXED'
-    VALUE: 2
+    VALUE: 1
   INIT:
-    TYPE: 'RAW'
+    TYPE: 'SHIFT'
 
 
 MODELS:
@@ -45,18 +43,16 @@ MODELS:
     DEPTH: 28
     WIDEN_FACTOR: 10
     DROP_RATE: 0
-    PARALLEL: FALSE
+    PARALLEL: TRUE
     PRETRAINED: FALSE
     CHKPT_PATH: null
     ACTIVATION:
-      NAME: 'ReLU'
-      GAMMA: 0.1
+      NAME: 'k-WTA2D'
+      SPARSITY_RATE: 0.1 
     LOSS:
       NAME: 'SCE'
       CLASSES: 10
-      C_MM: 1
-      REDUCTION: 'none'
-
+      REDUCTION: 'mean'
 
   # Model used to generate adversarial examples (ATTACK model)
   ADV_MODEL:
@@ -66,19 +62,22 @@ MODELS:
     DROP_RATE: 0
     PARALLEL: TRUE
     PRETRAINED: TRUE
-    CHKPT_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
+    CHKPT_PATH: "chkpt/chkpt_kwta1/model_best.pth.tar"
     ACTIVATION:
-      NAME: 'ReLU'
+      NAME: 'k-WTA'
+      SPARSITY_RATE: 0.1
     LOSS:
       NAME: 'SCE'
-      REDUCTION: 'mean'
       CLASSES: 10
+#       C_MM: 1
+      REDUCTION: 'mean'
 
 PATHS:
-  SAVE_DIR: 'chkpt/test/'
+  SAVE_DIR: 'chkpt/pgd_madry78_kwta1/'
   SAVE_NAME: 'model_best.pth.tar'
   RESULTS: 'results/'
-
+  
 LOGGER:
   DIR: ''
   FILE: 'experiments.txt'
+  

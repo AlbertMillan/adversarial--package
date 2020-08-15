@@ -6,6 +6,7 @@ from torchvision.datasets import CIFAR10
 
 import sys, os
 
+# TODO: Add tini IMAGENET from https://arxiv.org/pdf/1808.01976.pdf
 
 class Dataset(metaclass=ABCMeta):
     

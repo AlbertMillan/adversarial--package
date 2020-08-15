@@ -7,9 +7,9 @@ import time
 
 class K_WTA1D(nn.Module):
 
-    def __init__(self, gamma):
+    def __init__(self, act_cfg):
         super(K_WTA1D, self).__init__()
-        self.gamma = gamma
+        self.gamma = act_cfg.SPARSITY_RATE
 
     def forward(self, x):
 #         start = time.time()
@@ -39,9 +39,9 @@ class K_WTA1D(nn.Module):
 
 class K_WTA2D(nn.Module):
 
-    def __init__(self, gamma):
+    def __init__(self, act_cfg):
         super(K_WTA2D, self).__init__()
-        self.gamma = gamma
+        self.gamma = act_cfg.SPARSITY_RATE
 
     def forward(self, x):
         layer_size = x.size(-1) * x.size(-2)
@@ -77,7 +77,7 @@ class ActivationsManager(nn.Module):
     def __init__(self, activation_cfg):
         super(ActivationsManager, self).__init__()
         try:
-            self.currentActivation = self._activationDict[activation_cfg.NAME](activation_cfg.GAMMA)
+            self.currentActivation = self._activationDict[activation_cfg.NAME](activation_cfg)
         except AttributeError as err:
             print('K-WTA could not be executed (missing parameter in config file?). Running ReLU...')
             self.currentActivation = ReLU()
