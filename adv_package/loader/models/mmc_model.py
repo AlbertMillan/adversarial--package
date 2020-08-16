@@ -28,18 +28,11 @@ def create_mmc_object(class_object):
             return out * 10
 
         def forward(self, x):
-            # TODO: Move this out to the model and call the parent function.
-            out = self.conv1(x)
-            out = self.block1(out)
-            out = self.block2(out)
-            out = self.block3(out)
-            out = self.relu(self.bn1(out))
-            out = F.avg_pool2d(out, 8)
-            out = out.view(-1, self.nChannels)
+            st_logits, features = super().forward(x)
 
             # TODO: Can I implement this as a torch function (https://pytorch.org/docs/stable/notes/extending.html)
             # Max-mahalanobis center logits
-            x_expand = torch.unsqueeze(out, dim=1).repeat((1, self.nClasses, 1))
+            x_expand = torch.unsqueeze(features, dim=1).repeat((1, self.nClasses, 1))
             # mean_expand = torch.unsqueeze(self.centers())
             mean_expand = torch.unsqueeze(self.means, dim=0)
             sup = (x_expand - mean_expand) ** 2

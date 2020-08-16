@@ -44,7 +44,7 @@ MODELS:
     THREAT_MODEL:
         NAME: 'HGD'
         TRAIN: TRUE
-        PARALLEL: FALSE
+        PARALLEL: TRUE
         DENOISER_PATH: null
         TARGET:
             NAME: "WideResNet"

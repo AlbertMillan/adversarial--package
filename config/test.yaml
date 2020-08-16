@@ -24,7 +24,7 @@ DATASET:
 
 ATTACK:
   NAME: 'PGD'
-  STEP: 'RANDOM'
+  STEP: 'RAW'
   WEIGHT: 0.3
   ADV_RATE: 0.5
   MAX_ITER: 7
@@ -55,7 +55,7 @@ MODELS:
       NAME: 'SCE'
       CLASSES: 10
       C_MM: 1
-      REDUCTION: 'none'
+      REDUCTION: 'mean'
 
 
   # Model used to generate adversarial examples (ATTACK model)
@@ -65,8 +65,9 @@ MODELS:
     WIDEN_FACTOR: 10
     DROP_RATE: 0
     PARALLEL: TRUE
-    PRETRAINED: TRUE
-    CHKPT_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
+    PRETRAINED: FALSE
+    CHKPT_PATH: null
+#     CHKPT_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
     ACTIVATION:
       NAME: 'ReLU'
     LOSS:
@@ -75,7 +76,7 @@ MODELS:
       CLASSES: 10
 
 PATHS:
-  SAVE_DIR: 'chkpt/test/'
+  SAVE_DIR: 'chkpt/chkpt_scaled_2/'
   SAVE_NAME: 'model_best.pth.tar'
   RESULTS: 'results/'
 

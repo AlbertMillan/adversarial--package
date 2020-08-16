@@ -148,10 +148,10 @@ class WrapperResNet(StandardModel):
 
 class WrapperWideResNet(StandardModel):
     # Maybe I can train the models, store them online, and download the model from some site...
-    _modelDict = {
-        'SCE': WideResNet,
-        'MMC': create_mmc_object(WideResNet),
-    }
+#     _modelDict = {
+#         'SCE': WideResNet,
+#         'MMC': create_mmc_object(WideResNet),
+#     }
 
     def __init__(self, model_cfg):
         try:
@@ -160,7 +160,8 @@ class WrapperWideResNet(StandardModel):
             #     temp_model = mmc_wrapper(model_cfg)
             # elif model_cfg.LOSS.NAME == 'SCE':
             #     temp_model = WideResNet(model_cfg)
-            temp_model = self.set_model(model_cfg)
+#             temp_model = self.set_model(model_cfg)
+            temp_model = WideResNet(model_cfg)
             self.model = self._load_model(temp_model, model_cfg.CHKPT_PATH, model_cfg.PARALLEL)
             self.parallel = model_cfg.PARALLEL
             # self.save_dir = model_cfg.SAVE_CFG.SAVE_DIR

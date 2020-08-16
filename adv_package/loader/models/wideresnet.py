@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .modules import ActivationsManager
+from .modules import ActivationsManager, LogitsManager
 
 # from .logits.logits_step import StandardLogits, MahalanobisLogits
 # from .mmc_model import MMC
@@ -73,13 +73,16 @@ class WideResNet(nn.Module):
         # global average pooling and classifier
         self.bn1 = nn.BatchNorm2d(nChannels[3])
         self.relu = ActivationsManager(model_cfg.ACTIVATION)
-        self.fc = nn.Linear(nChannels[3], num_classes)
+        
+#         self.fc = nn.Linear(nChannels[3], num_classes)
+        self.fc = LogitsManager(model_cfg, nChannels[3])
+        
         self.nChannels = nChannels[3]
         self.nClasses = num_classes
 
         # self.logitsLayer = self.set_logits_layer(model_cfg.LOSS)
         
-        self.crossEntropy = nn.CrossEntropyLoss(reduction=model_cfg.LOSS.REDUCTION)
+#         self.crossEntropy = nn.CrossEntropyLoss(reduction=model_cfg.LOSS.REDUCTION)
 
         self._init_weights()
 
@@ -105,5 +108,5 @@ class WideResNet(nn.Module):
         return self.fc(out)
 
     def loss(self, logits, y):
-        return self.crossEntropy(logits, y)
+        return self.fc.loss(logits, y)
 
