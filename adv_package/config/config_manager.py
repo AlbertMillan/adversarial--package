@@ -123,6 +123,9 @@ class DefenseManager(ConfigManager):
         # TODO: Add testing on each iteration of the model.
 
         best_pred = 0.0
+#         print(self.stepManager.threat_model.model)
+#         summary(self.stepManager.threat_model.model, (3,32,32))
+#         sys.exit()
 
         for epoch in range(self.iterations):
             self.stepManager.tracker.setEpoch(epoch)

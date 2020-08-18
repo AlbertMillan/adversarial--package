@@ -56,10 +56,10 @@ class K_WTA2D(nn.Module):
         return out
 
 
-class ReLU(nn.Module):
+class ReLUWrapper(nn.Module):
 
     def __init__(self, *args):
-        super(ReLU, self).__init__()
+        super(ReLUWrapper, self).__init__()
         self.relu = nn.ReLU(inplace=True)
 
     def forward(self, x):
@@ -71,7 +71,7 @@ class ActivationsManager(nn.Module):
     _activationDict = {
         'k-WTA1D': K_WTA1D,
         'k-WTA2D': K_WTA2D,
-        'ReLU': ReLU,
+        'ReLU': ReLUWrapper,
     }
 
     def __init__(self, activation_cfg):
@@ -82,8 +82,17 @@ class ActivationsManager(nn.Module):
             print('K-WTA could not be executed (missing parameter in config file?). Running ReLU...')
             self.currentActivation = ReLU()
 
-    def forward(self, x):
-        return self.currentActivation(x)
+    @property
+    def activation(self):
+        return self.currentActivation
+            
+#     def forward(self, x):
+#         return self.currentActivation(x)
+
+
+def activation(activation_cfg):
+    temp = ActivationsManager(activation_cfg)
+    return temp.activation
 
 
 if __name__ == '__main__':

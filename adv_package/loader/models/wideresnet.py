@@ -2,21 +2,18 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .modules import ActivationsManager, LogitsManager
-
-# from .logits.logits_step import StandardLogits, MahalanobisLogits
-# from .mmc_model import MMC
+from .modules import LogitsManager, activation
 
 
 class BasicBlock(nn.Module):
     def __init__(self, in_planes, out_planes, stride, act_cfg, dropRate=0.0):
         super(BasicBlock, self).__init__()
         self.bn1 = nn.BatchNorm2d(in_planes)
-        self.relu1 = ActivationsManager(act_cfg)
+        self.relu1 = activation(act_cfg)
         self.conv1 = nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
                                padding=1, bias=False)
         self.bn2 = nn.BatchNorm2d(out_planes)
-        self.relu2 = ActivationsManager(act_cfg)
+        self.relu2 = activation(act_cfg)
         self.conv2 = nn.Conv2d(out_planes, out_planes, kernel_size=3, stride=1,
                                padding=1, bias=False)
         self.droprate = dropRate
@@ -72,17 +69,15 @@ class WideResNet(nn.Module):
         self.block3 = NetworkBlock(n, nChannels[2], nChannels[3], block, 2, model_cfg.ACTIVATION, dropRate)
         # global average pooling and classifier
         self.bn1 = nn.BatchNorm2d(nChannels[3])
-        self.relu = ActivationsManager(model_cfg.ACTIVATION)
+        self.relu = activation(model_cfg.ACTIVATION)
         
-#         self.fc = nn.Linear(nChannels[3], num_classes)
-        self.fc = LogitsManager(model_cfg, nChannels[3])
+        # Append Logits Module
+        logitSelector = LogitsManager(model_cfg, nChannels[3])
+        self.logiter = logitSelector.logits
+        
         
         self.nChannels = nChannels[3]
         self.nClasses = num_classes
-
-        # self.logitsLayer = self.set_logits_layer(model_cfg.LOSS)
-        
-#         self.crossEntropy = nn.CrossEntropyLoss(reduction=model_cfg.LOSS.REDUCTION)
 
         self._init_weights()
 
@@ -105,8 +100,8 @@ class WideResNet(nn.Module):
         out = F.avg_pool2d(out, 8)
         out = out.view(-1, self.nChannels)
 
-        return self.fc(out)
+        return self.logiter(out)
 
     def loss(self, logits, y):
-        return self.fc.loss(logits, y)
+        return self.logiter.loss(logits, y)
 

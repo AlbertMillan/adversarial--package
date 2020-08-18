@@ -60,24 +60,22 @@ class LogitsStandard(nn.Module):
     def loss(self, logits, y_batch):
         return self.crossEntropy(logits, y_batch)
 
-    
-class LogitsManager(nn.Module):
-    
+
+
+class LogitsManager(object):
+    ''' Acts as an intermediate class used to select the correct logits Module. '''
     _logitsDict = {
         'SCE': LogitsStandard,
         'MMC': LogitsMMC,
     }
     
     def __init__(self, model_cfg, in_features):
-        super(LogitsManager, self).__init__()
         try:
             self.currentLogits = self._logitsDict[model_cfg.LOSS.NAME](model_cfg, in_features)
         except AttributeError as err:
             print('Logits Module could not be instantiated. Running Standard Logits...')
             self.currentLogits = LogitsStandard(model_cfg, in_features)
             
-    def forward(self, x):
-        return self.currentLogits(x)
-    
-    def loss(self, logits, y_batch):
-        return self.currentLogits.loss(logits, y_batch)
+    @property
+    def logits(self):
+        return self.currentLogits
