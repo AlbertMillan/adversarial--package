@@ -123,9 +123,8 @@ class DefenseManager(ConfigManager):
         # TODO: Add testing on each iteration of the model.
 
         best_pred = 0.0
-#         print(self.stepManager.threat_model.model)
-#         summary(self.stepManager.threat_model.model, (3,32,32))
-#         sys.exit()
+        summary(self.stepManager.threat_model.model, (3,32,32))
+        print('Trainable Parameters:', sum(p.numel() for p in self.stepManager.threat_model.model.parameters() if p.requires_grad))
 
         for epoch in range(self.iterations):
             self.stepManager.tracker.setEpoch(epoch)
