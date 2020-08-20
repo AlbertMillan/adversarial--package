@@ -1,8 +1,10 @@
+# Plain Models on CIFAR10 must be trained with crop and horizontal flips for optimal accuracy.
+
 TYPE: 'DEFENSE'
 
 HYPERPARAMETERS:
-  BATCH_SIZE: 64
-  EPOCHS: 76
+  BATCH_SIZE: 192
+  EPOCHS: 75
   OPTIM:
     NAME: 'SGD'
     LEARNING_RATE: 0.1
@@ -11,7 +13,7 @@ HYPERPARAMETERS:
     WEIGHT_DECAY: 0.0002
     SCHEDULER:
       NAME: 'STEP'
-      EPOCH: 75
+      EPOCH: 60
       LR_DECAY: 0.1
   PRINT_FREQ: 10
 
@@ -19,8 +21,9 @@ DATASET:
   NAME: 'CIFAR10'
   CLASSES: 10
   DIR_PATH: 'datasets/'
+  SHUFFLE: TRUE
   NORMALIZE: FALSE
-  CROP: FALSE
+  CROP: TRUE
 
 ATTACK:
   NAME: 'PGD'
@@ -62,8 +65,8 @@ MODELS:
     WIDEN_FACTOR: 10
     DROP_RATE: 0
     PARALLEL: TRUE
-    PRETRAINED: TRUE
-    CHKPT_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
+    PRETRAINED: FALSE
+    CHKPT_PATH: null
     ACTIVATION:
       NAME: 'ReLU'
     LOSS:

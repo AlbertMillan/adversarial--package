@@ -14,7 +14,7 @@ DATASET:
     
 ATTACK:
     NAME: "PGD"
-    STEP: 'ADV'
+    STEP: 'RAW'
     MAX_ITER: 1
     MOMENTUM: 0
     EPSILON:
@@ -36,12 +36,14 @@ MODELS:
         DROP_RATE: 0
         PARALLEL: TRUE
         PRETRAINED: TRUE
-        CHKPT_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
+        CHKPT_PATH: "chkpt/kwta1/model_best.pth.tar"
+        ACTIVATION:
+            NAME: 'k-WTA2D'
+            SPARSITY_RATE: 0.1 
         LOSS:
-            NAME: 'MMC'
-            FEAT_SPACE: 640
+            NAME: 'SCE'
             CLASSES: 10
-            C_MM: 1
+            REDUCTION: 'mean'
 
     # Model we are trying to fool
     THREAT_MODEL:
@@ -51,13 +53,19 @@ MODELS:
         DROP_RATE: 0
         PARALLEL: TRUE
         PRETRAINED: TRUE
-        CHKPT_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
+        CHKPT_PATH: "chkpt/kwta1/model_best.pth.tar"
+        ACTIVATION:
+            NAME: 'k-WTA2D'
+            SPARSITY_RATE: 0.1 
         LOSS:
-            NAME: 'MMC'
+            NAME: 'SCE'
             CLASSES: 10
-            FEAT_SPACE: 640
-            C_MM: 1
+            REDUCTION: 'mean'
 
 PATHS:
-    RESULTS_PATH: 'results/'
+    RESULTS: 'results/'
+    
+LOGGER:
+    DIR: ''
+    FILE: 'experiments.txt'
 

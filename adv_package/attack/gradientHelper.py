@@ -72,7 +72,11 @@ class FixedAlpha(AlphaManager):
         self.alpha = alpha_cfg.VALUE
 
     def getAlpha(self, *args):
-        return self.alpha / 255.
+        if torch.cuda.is_available():
+            out = torch.cuda.FloatTensor([self.alpha / 255.])
+        else:
+            out = torch.FloatTensor([self.alpha / 255.])
+        return out
 
 class DivisorAlpha(AlphaManager):
 

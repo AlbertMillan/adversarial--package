@@ -39,12 +39,12 @@ from .denoiser import Denoiser
 
 class FullDenoiser(nn.Module):
 
-    def __init__(self, target_model, n=1, hard_mining=0, loss_norm=False):
+    def __init__(self, target_model, denoiser_cfg, n=1, hard_mining=0, loss_norm=False):
         super(FullDenoiser, self).__init__()
 
         # 1. Load Models
         self.target_model = target_model
-        self.denoiser = Denoiser(x_h=32, x_w=32)
+        self.denoiser = Denoiser(denoiser_cfg)
 
         self.crossEntropy = nn.CrossEntropyLoss()
 
@@ -58,9 +58,10 @@ class FullDenoiser(nn.Module):
 
         if self.training:
             assert x is not None, "ERROR: Original image not provided to HGD forward pass..."
-
+            
             out_org = self.target_model(x)
-
+#             sys.exit()
+    
             return out_adv, out_org
 
         return out_adv

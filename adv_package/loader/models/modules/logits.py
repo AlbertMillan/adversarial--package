@@ -36,10 +36,10 @@ class LogitsMMC(nn.Module):
         logits = -torch.sum(sup, dim=-1)
         return logits
     
-    def loss(self, logits, y_batch):
+    def loss(self, logits, y):
         # TODO: LOSS function used?
         y_true = torch.zeros((y.size(0), self.nClasses)).cuda()
-        y_true[np.arange(0, y.size(0)), y] = -1
+        y_true[torch.arange(0, y.size(0)), y] = -1
         loss = torch.sum(logits * y_true, dim=1)
         final_loss = torch.mean(loss)
         return final_loss

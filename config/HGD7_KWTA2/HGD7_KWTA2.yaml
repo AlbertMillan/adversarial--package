@@ -17,6 +17,7 @@ DATASET:
     NAME: 'CIFAR10'
     CLASSES: 10
     DIR_PATH: 'datasets/'
+    SHUFFLE: TRUE
     NORMALIZE: FALSE
     CROP: FALSE
     
@@ -43,6 +44,8 @@ MODELS:
     # Model we seek to train
     THREAT_MODEL:
         NAME: 'HGD'
+        INPUT_WIDTH: 32
+        INPUT_HEIGHT: 32
         TRAIN: TRUE
         PARALLEL: TRUE
         DENOISER_PATH: null
@@ -53,13 +56,16 @@ MODELS:
             DROP_RATE: 0
             PARALLEL: TRUE
             PRETRAINED: TRUE
-            CHKPT_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
+            CHKPT_PATH: "chkpt/kwta2/model_best.pth.tar"
             ACTIVATION:
-                NAME: 'ReLU'
+                NAME: 'k-WTA2D'
+                SPARSITY_RATE: 0.2
             LOSS:
                 NAME: 'SCE'
                 CLASSES: 10
                 REDUCTION: 'mean'
+        ACTIVATION:
+            NAME: 'ReLU'
     
     # Model we are trying to fool
     ADV_MODEL:
@@ -69,9 +75,10 @@ MODELS:
         DROP_RATE: 0
         PARALLEL: TRUE
         PRETRAINED: TRUE
-        CHKPT_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
+        CHKPT_PATH: "chkpt/kwta2/model_best.pth.tar"
         ACTIVATION:
-            NAME: 'ReLU'
+            NAME: 'k-WTA2D'
+            SPARSITY_RATE: 0.2
         LOSS:
             NAME: 'SCE'
             CLASSES: 10
@@ -79,9 +86,9 @@ MODELS:
 
     
 PATHS:
-    SAVE_DIR: 'chkpt/denoiser_ifgsm7/'
+    SAVE_DIR: 'chkpt/denoiser_ifgsm7_kwta2/'
     SAVE_NAME: 'model_best.pth.tar'
-    RESULTS_PATH: 'results/'
+    RESULTS: 'results/'
 
 LOGGER:
     DIR: ''

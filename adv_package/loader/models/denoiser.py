@@ -4,19 +4,22 @@ import torch.nn.functional as F
 import numpy as np
 import sys, os
 
+from .modules import activation
+
 
 class BasicBlock(nn.Module):
     """ Assumes kernel size of constant size."""
     
-    def __init__(self, in_channel, out_channel, stride, padding):
+    def __init__(self, activation_cfg, in_channel, out_channel, stride, padding):
         super(BasicBlock, self).__init__()
         self.conv = nn.Conv2d(in_channel, out_channel, kernel_size=(3,3), stride=stride, padding=padding)
         self.batchNorm1 = nn.BatchNorm2d(out_channel, eps=1e-05, momentum=0.9)
+        self.activation = activation(activation_cfg)
         
     def forward(self, x):
         out = self.conv(x)
         out = self.batchNorm1(out)
-        out = F.relu(out)
+        out = self.activation(out)
         
         return out
 
@@ -25,18 +28,18 @@ class BasicBlock(nn.Module):
 class NetworkBlock(nn.Module):
     """ Creates a CX block. """
     
-    def __init__(self, n_blocks, block, in_planes, out_planes, padding):
+    def __init__(self, n_blocks, block, activation_cfg, in_planes, out_planes, padding):
         super(NetworkBlock, self).__init__()
-        self.layer = self._make_layer(n_blocks, block, in_planes, out_planes, padding)
+        self.layer = self._make_layer(n_blocks, block, activation_cfg, in_planes, out_planes, padding)
         
-    def _make_layer(self, n_blocks, block, in_planes, out_planes, padding):
+    def _make_layer(self, n_blocks, block, activation_cfg, in_planes, out_planes, padding):
         """ Creates a CX block as nn.Sequential() """
         layers = []
         is_three_block = (n_blocks == 3)
         for i in range(int(n_blocks)):
             # Stride is 2x2 for first convolution of C3 blocks.
             stride = (2 if i == 0 and is_three_block else 1 )
-            layers.append( block(in_planes[i], out_planes[i], stride, padding) )
+            layers.append( block(activation_cfg, in_planes[i], out_planes[i], stride, padding) )
         
         return nn.Sequential(*layers)
     
@@ -46,7 +49,7 @@ class NetworkBlock(nn.Module):
 
 class Denoiser(nn.Module):
     
-    def __init__(self, x_h, x_w, kernel_size=(3,3), stride=1, padding=1):
+    def __init__(self, denoiser_cfg, kernel_size=(3,3), stride=1, padding=1):
         super(Denoiser, self).__init__()
         
         # These can probably be stored in a configuration file of some sort.
@@ -58,6 +61,8 @@ class Denoiser(nn.Module):
         # Define (H, W) for upsampling
         h = []
         w = []
+        x_h = denoiser_cfg.INPUT_HEIGHT
+        x_w = denoiser_cfg.INPUT_WIDTH
         for i in range(len(nChannels_bwd) - 1):
             h.append(x_h)
             w.append(x_w)
@@ -65,10 +70,10 @@ class Denoiser(nn.Module):
             x_w = int(np.ceil(x_w / 2.))
 
         # Encoder
-        self.forward_blocks = self._make_CX_fwd_blocks(blockSzs_fwd, nChannels_fwd)
+        self.forward_blocks = self._make_CX_fwd_blocks(blockSzs_fwd, nChannels_fwd, denoiser_cfg.ACTIVATION)
         
         # Decoder
-        self.backward_blocks = self._make_CX_bwd_blocks(blockSzs_bwd, nChannels_bwd, nChannels_fwd)
+        self.backward_blocks = self._make_CX_bwd_blocks(blockSzs_bwd, nChannels_bwd, nChannels_fwd, denoiser_cfg.ACTIVATION)
         
         # Upsampling on decoder fusion layers
         self.upsampler = self._make_upsample_layers(blockSzs_bwd, nChannels_bwd, h, w)
@@ -78,7 +83,7 @@ class Denoiser(nn.Module):
         
         
         
-    def _make_CX_fwd_blocks(self, blockSzs, nChannels):
+    def _make_CX_fwd_blocks(self, blockSzs, nChannels, activation_cfg):
         """ 
         Creates a the list of network blocks CX for encoder as nn.ModuleList().
         We want to be able to retrieve outputs of each block, hence
@@ -89,11 +94,11 @@ class Denoiser(nn.Module):
         for i in range(len(blockSzs)):
             in_planes = np.append(nChannels[i],  [nChannels[i+1]] * (blockSzs[i] - 1 ) )
             out_planes = [nChannels[i+1]] * blockSzs[i]
-            blocks.append( NetworkBlock(blockSzs[i], block, in_planes, out_planes, padding=1) )
+            blocks.append( NetworkBlock(blockSzs[i], block, activation_cfg, in_planes, out_planes, padding=1) )
                          
         return nn.ModuleList(blocks)
     
-    def _make_CX_bwd_blocks(self, blockSzs, nChannels_bwd, nChannels_fwd):
+    def _make_CX_bwd_blocks(self, blockSzs, nChannels_bwd, nChannels_fwd, activation_cfg):
         """ 
         Creates a the list of network blocks CX for decoder as nn.ModuleList().
         """
@@ -105,7 +110,7 @@ class Denoiser(nn.Module):
             in_planes = np.append(nChannels_bwd[i] + nChannels_fwd[last_fusion_dim-i],  
                                   [nChannels_bwd[i+1]] * (blockSzs[i] - 1 ) )
             out_planes = [nChannels_bwd[i+1]] * blockSzs[i]
-            blocks.append( NetworkBlock(blockSzs[i], block, in_planes, out_planes, padding=1) )
+            blocks.append( NetworkBlock(blockSzs[i], block, activation_cfg, in_planes, out_planes, padding=1) )
                          
         return nn.ModuleList(blocks)
     

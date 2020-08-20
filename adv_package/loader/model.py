@@ -1,4 +1,4 @@
-from .models import WideResNet, FullDenoiser, create_mmc_object
+from .models import WideResNet, WideResNetRAW, FullDenoiser, create_mmc_object
 
 from abc import ABCMeta, abstractmethod
 import torch
@@ -23,6 +23,10 @@ class Model(metaclass=ABCMeta):
         is_cuda = torch.cuda.is_available()
         n_gpus = torch.cuda.device_count()
 
+        # Load checkpoint
+        if load_path:
+            model = Model._load_checkpoint(model, load_path)
+            print(">>> LOADING PRE-TRAINED MODEL:", load_path)
         # Send to GPU if any
         if n_gpus > 1 and parallel:
             model = torch.nn.DataParallel(model).cuda()
@@ -30,11 +34,6 @@ class Model(metaclass=ABCMeta):
         elif is_cuda:
             model = model.cuda()
             print(">>> SENDING MODEL TO GPU...")
-
-        # Load checkpoint
-        if load_path:
-            model = Model._load_checkpoint(model, load_path)
-            print(">>> LOADING PRE-TRAINED MODEL:", load_path)
 
         return model
 
@@ -148,19 +147,10 @@ class WrapperResNet(StandardModel):
 
 class WrapperWideResNet(StandardModel):
     # Maybe I can train the models, store them online, and download the model from some site...
-#     _modelDict = {
-#         'SCE': WideResNet,
-#         'MMC': create_mmc_object(WideResNet),
-#     }
 
     def __init__(self, model_cfg):
         try:
-            # if model_cfg.LOSS.NAME == 'MMC':
-            #     mmc_wrapper = create_mmc_object(WideResNet)
-            #     temp_model = mmc_wrapper(model_cfg)
-            # elif model_cfg.LOSS.NAME == 'SCE':
-            #     temp_model = WideResNet(model_cfg)
-#             temp_model = self.set_model(model_cfg)
+#             temp_model = WideResNetRAW(model_cfg)
             temp_model = WideResNet(model_cfg)
             self.model = self._load_model(temp_model, model_cfg.CHKPT_PATH, model_cfg.PARALLEL)
             self.parallel = model_cfg.PARALLEL
@@ -203,9 +193,12 @@ class WrapperHGD(Model):
         # Load target Model
         try:
             target_model_manager = ModelManager(model_cfg.TARGET)
-            self.model = FullDenoiser(target_model_manager.getModel())
-            self.model.denoiser = self._load_model(model_cfg.DENOISER_PATH, model_cfg.PARALLEL)
+            model = FullDenoiser(target_model_manager.getModel(), model_cfg)
+            model.denoiser = self._load_model(model.denoiser, model_cfg.DENOISER_PATH, False)
+#             self.model = torch.nn.DataParallel(model).cuda()
+            self.model = self._load_model(model, None, model_cfg.PARALLEL)
             self.parallel = model_cfg.PARALLEL
+#             self.parallel = False
         except AttributeError as err:
             print('Error: Undefined variable in constructor {0}'.format(self.__class__.__name__))
             print(err)
@@ -216,8 +209,8 @@ class WrapperHGD(Model):
     def parameters(self):
         return self.model.denoiser.parameters()
 
-    def _load_model(self, load_path, parallel):
-        return super()._load_model(self.model.denoiser, load_path, parallel)
+    def _load_model(self, model, load_path, parallel):
+        return super()._load_model(model, load_path, parallel)
 
     def save_model(self, save_dir, file_name):
         if self.parallel:
@@ -234,6 +227,7 @@ class WrapperHGD(Model):
 
     def trainLoss(self, logits_org, logits_smooth):
         # TODO: can I create generic method model.(module).train_loss
+#         return self.model.
         return (self.model.module.train_loss(logits_org, logits_smooth) if self.parallel else \
                     self.model.train_loss(logits_org, logits_smooth))
 

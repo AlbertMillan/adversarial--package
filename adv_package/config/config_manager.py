@@ -90,7 +90,7 @@ class DefenseManager(ConfigManager):
 
     def __init__(self, config):
         dataset = self.setDataset(config.DATASET)
-        self.train_loader = DataLoader(dataset.train_data, batch_size=config.HYPERPARAMETERS.BATCH_SIZE)
+        self.train_loader = DataLoader(dataset.train_data, batch_size=config.HYPERPARAMETERS.BATCH_SIZE, shuffle=config.DATASET.SHUFFLE)
         self.test_loader = DataLoader(dataset.test_data, batch_size=config.HYPERPARAMETERS.BATCH_SIZE)
         self.stepManager = self.setStep(config.ATTACK, config.MODELS, config.HYPERPARAMETERS.EPOCHS)
         self.paths = config.PATHS
@@ -105,7 +105,7 @@ class DefenseManager(ConfigManager):
 
     def setDataset(self, arg):
         try:
-            return self._datasetDict[arg.NAME](arg.DIR_PATH, arg.NORMALIZE, arg.CROP)
+            return self._datasetDict[arg.NAME](arg.DIR_PATH, arg.CROP, arg.NORMALIZE)
         except AttributeError as err:
             print('Error: Undefined variable in constructor {0}'.format(self.__class__.__name__))
             print(err)
@@ -123,7 +123,7 @@ class DefenseManager(ConfigManager):
         # TODO: Add testing on each iteration of the model.
 
         best_pred = 0.0
-        summary(self.stepManager.threat_model.model, (3,32,32))
+#         summary(self.stepManager.threat_model.model, (3,32,32))
         print('Trainable Parameters:', sum(p.numel() for p in self.stepManager.threat_model.model.parameters() if p.requires_grad))
 
         for epoch in range(self.iterations):

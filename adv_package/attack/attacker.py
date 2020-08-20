@@ -147,7 +147,7 @@ class MIM(GradientAttack):
     def run(self, x_batch, y_batch):
         # Retrieve step size
         eps = self.epsManager.getEps(x_batch.size(0))
-        alpha = self.alphaManager.getAlpha(self.epsManager.getEps())
+        alpha = self.alphaManager.getAlpha(eps)
 
         x = (self.initManager.getShift(x_batch.size(), eps) + x_batch).clone().detach().requires_grad_(True).cuda()
         # self.checkValidAdversary(x)

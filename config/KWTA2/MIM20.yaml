@@ -1,0 +1,71 @@
+TYPE: 'ATTACK'
+
+HYPERPARAMETERS:
+    BATCH_SIZE: 64
+    PRINT_FREQ: 10
+
+DATASET:
+    NAME: 'CIFAR10'
+    TRAIN: FALSE
+    CLASSES: 10
+    DIR_PATH: 'datasets/'
+    NORMALIZE: FALSE
+    CROP: FALSE
+    
+ATTACK:
+    NAME: "MIM"
+    STEP: 'ADV'
+    MAX_ITER: 20
+    MOMENTUM: 0
+    EPSILON:
+        TYPE: 'FIXED'
+        VALUE: 8
+    ALPHA:
+        TYPE: 'FIXED'
+        VALUE: 2
+    INIT:
+        TYPE: 'SHIFT'
+
+
+MODELS:
+    # Model used to generate adversarial examples (ATTACK model)
+    ADV_MODEL:
+        NAME: "WideResNet"
+        DEPTH: 28
+        WIDEN_FACTOR: 10
+        DROP_RATE: 0
+        PARALLEL: TRUE
+        PRETRAINED: TRUE
+        CHKPT_PATH: "chkpt/kwta2/model_best.pth.tar"
+        ACTIVATION:
+            NAME: 'k-WTA2D'
+            SPARSITY_RATE: 0.2 
+        LOSS:
+            NAME: 'SCE'
+            CLASSES: 10
+            REDUCTION: 'mean'
+
+    # Model we are trying to fool
+    THREAT_MODEL:
+        NAME: "WideResNet"
+        DEPTH: 28
+        WIDEN_FACTOR: 10
+        DROP_RATE: 0
+        PARALLEL: TRUE
+        PRETRAINED: TRUE
+        CHKPT_PATH: "chkpt/kwta2/model_best.pth.tar"
+        ACTIVATION:
+            NAME: 'k-WTA2D'
+            SPARSITY_RATE: 0.2 
+        LOSS:
+            NAME: 'SCE'
+            CLASSES: 10
+            REDUCTION: 'mean'
+
+PATHS:
+    RESULTS: 'results/'
+    
+LOGGER:
+    DIR: ''
+    FILE: 'experiments.txt'
+
