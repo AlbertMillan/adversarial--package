@@ -1,7 +1,7 @@
 TYPE: 'ATTACK'
 
 HYPERPARAMETERS:
-    BATCH_SIZE: 64
+    BATCH_SIZE: 128
     PRINT_FREQ: 10
 
 DATASET:
@@ -9,14 +9,15 @@ DATASET:
     TRAIN: FALSE
     CLASSES: 10
     DIR_PATH: 'datasets/'
+    SHUFFLE: FALSE
     NORMALIZE: FALSE
     CROP: FALSE
     
 ATTACK:
-    NAME: "PGD"
+    NAME: 'MIM'
     STEP: 'ADV'
-    MAX_ITER: 7
-    MOMENTUM: 0
+    MAX_ITER: 20
+    MOMENTUM: 1
     EPSILON:
         TYPE: 'FIXED'
         VALUE: 8
@@ -30,37 +31,37 @@ ATTACK:
 MODELS:
     # Model used to generate adversarial examples (ATTACK model)
     ADV_MODEL:
-        NAME: "WideResNet"
+        NAME: 'WideResNet'
         DEPTH: 28
         WIDEN_FACTOR: 10
         DROP_RATE: 0
         PARALLEL: TRUE
         PRETRAINED: TRUE
-        CHKPT_PATH: "chkpt/chkpt_scaled_2/model_best.pth.tar"
+        CHKPT_PATH: 'chkpt/base_mmc/model_best.pth.tar'
         ACTIVATION:
             NAME: 'ReLU'
-            GAMMA: 0.1
         LOSS:
-            NAME: 'SCE'
+            NAME: 'MMC'
             CLASSES: 10
-            REDUCTION: 'mean'
+            C_MM: 1
+            REDUCTION: 'none'
 
     # Model we are trying to fool
     THREAT_MODEL:
-        NAME: "WideResNet"
+        NAME: 'WideResNet'
         DEPTH: 28
         WIDEN_FACTOR: 10
         DROP_RATE: 0
         PARALLEL: TRUE
-        PRETRAINED: FALSE
-        CHKPT_PATH: "chkpt/chkpt_scaled_2/model_best.pth.tar"
+        PRETRAINED: TRUE
+        CHKPT_PATH: 'chkpt/base_mmc/model_best.pth.tar'
         ACTIVATION:
             NAME: 'ReLU'
-            GAMMA: 0.1
         LOSS:
-            NAME: 'SCE'
+            NAME: 'MMC'
             CLASSES: 10
-            REDUCTION: 'mean'
+            C_MM: 1
+            REDUCTION: 'none'
 
 PATHS:
     RESULTS: 'results/'

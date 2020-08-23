@@ -214,7 +214,8 @@ class WrapperHGD(Model):
 
     def save_model(self, save_dir, file_name):
         if self.parallel:
-            super()._save_checkpoint(self.model.denoiser.module.state_dict(), save_dir, file_name)
+#             super()._save_checkpoint(self.model.denoiser.module.state_dict(), save_dir, file_name)
+            super()._save_checkpoint(self.model.module.denoiser.state_dict(), save_dir, file_name)
         else:
             super()._save_checkpoint(self.model.denoiser.state_dict(), save_dir, file_name)
 
@@ -234,6 +235,12 @@ class WrapperHGD(Model):
     def testLoss(self, logits, y_batch):
         return (self.model.module.loss(logits, y_batch) if self.parallel else \
                     self.model.loss(logits, y_batch))
+    
+    def forward(self, x_input):
+        return self.testForward(x_input)
+    
+    def loss(self, logits, y_batch):
+        return self.testLoss(logits, y_batch)
 
 
 

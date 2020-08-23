@@ -238,6 +238,22 @@ class RandomStep(StepManager):
         self.tracker.store(logits, loss, y_batch)
         
         
+class RawHGDStep(StepManager):
+    
+    def trainStep(self, x_batch, y_batch):
+        lg_smooth, lg_raw = self.threat_model.trainForward(x_batch, x_adv)
+        loss = self.threat_model.trainLoss(lg_raw, lg_smooth)
+        loss.backward()
+
+        self.tracker.store(lg_smooth, loss, y_batch)
+        self.optimManager.step()
+    
+    def testStep(self, x_batch, y_batch):
+        logits = self.threat_model.testForward(x_batch)
+        loss = self.threat_model.testLoss(logits, y_batch)
+        
+        self.tracker.store(logits, loss, y_batch)
+        
 
 class AdvHGDStep(StepManager):
     ''' There is a difference on how the loss is computed during training and testing procedure.'''
@@ -261,7 +277,6 @@ class AdvHGDStep(StepManager):
         loss = self.threat_model.testLoss(logits, y_batch)
 
         self.tracker.store(logits, loss, y_batch)
-        self.optimManager.zeroGrad()
 
 
 class MixedHGDStep(StepManager):

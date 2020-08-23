@@ -5,16 +5,15 @@ HYPERPARAMETERS:
     EPOCHS: 75
     OPTIM:
         NAME: 'SGD'
-        LEARNING_RATE: 0.01
+        LEARNING_RATE: 0.1
         MOMENTUM: 0.9
         NESTEROV: TRUE
         WEIGHT_DECAY: 0.0002
         SCHEDULER:
-              NAME: 'STEP'
-              EPOCH: 60
-              LR_DECAY: 0.1
+            NAME: 'STEP'
+            EPOCH: 60
+            LR_DECAY: 0.1
     PRINT_FREQ: 10
-
 
 DATASET:
     NAME: 'CIFAR10'
@@ -26,25 +25,22 @@ DATASET:
     
 ATTACK:
     NAME: 'PGD'
-    STEP: 'RAW'
-    MAX_ITER: 7
-    MOMENTUM: null
-    # [CONSTANT(4), DYNAMIC(MAX_ITER), RANDOM_RANGE]
+    STEP: 'BOTH'
+    MAX_ITER: 8
     EPSILON:
         TYPE: 'FIXED'
         VALUE: 8
     ALPHA:
-        TYPE: 'DIVISOR'
-        # Denominator to compute alpha: alpha = EPSILON / DIVISOR
-        DIVISOR: 4
+        TYPE: 'FIXED'
+        VALUE: 2
     INIT:
-        TYPE: 'RAW'
+        TYPE: 'SHIFT'
 
 
 MODELS:
-    # Model we seek to train
+    # Model we are training
     THREAT_MODEL:
-        NAME: 'WideResNet'
+        NAME: "WideResNet"
         DEPTH: 28
         WIDEN_FACTOR: 10
         DROP_RATE: 0
@@ -52,16 +48,15 @@ MODELS:
         PRETRAINED: FALSE
         CHKPT_PATH: null
         ACTIVATION:
-            NAME: 'ReLU'
+          NAME: 'ReLU'
         LOSS:
-            NAME: 'MMC'
-            CLASSES: 10
-            C_MM: 1
-            REDUCTION: 'none'
-    
-    # Model we are trying to fool
+          NAME: 'SCE'
+          CLASSES: 10
+          REDUCTION: 'mean'
+
+    # Model used to generate adversarial examples (ATTACK model)
     ADV_MODEL:
-        NAME: 'WideResNet'
+        NAME: "WideResNet"
         DEPTH: 28
         WIDEN_FACTOR: 10
         DROP_RATE: 0
@@ -69,15 +64,14 @@ MODELS:
         PRETRAINED: TRUE
         CHKPT_PATH: "chkpt/chkpt_scaled_2/model_best.pth.tar"
         ACTIVATION:
-            NAME: 'ReLU'
+          NAME: 'ReLU'
         LOSS:
-            NAME: 'SCE'
-            CLASSES: 10
-            REDUCTION: 'mean'
+          NAME: 'SCE'
+          CLASSES: 10
+          REDUCTION: 'mean'
 
-    
 PATHS:
-    SAVE_DIR: 'chkpt/base_mmc/'
+    SAVE_DIR: 'chkpt/at_wrn_pgd8/'
     SAVE_NAME: 'model_best.pth.tar'
     RESULTS: 'results/'
 

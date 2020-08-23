@@ -44,6 +44,7 @@ class FullDenoiser(nn.Module):
 
         # 1. Load Models
         self.target_model = target_model
+        self.target_model.model.eval()
         self.denoiser = Denoiser(denoiser_cfg)
 
         self.crossEntropy = nn.CrossEntropyLoss()

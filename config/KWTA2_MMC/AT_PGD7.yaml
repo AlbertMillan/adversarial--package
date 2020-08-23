@@ -1,8 +1,8 @@
 TYPE: 'DEFENSE'
 
 HYPERPARAMETERS:
-    BATCH_SIZE: 64
-    EPOCHS: 76
+    BATCH_SIZE: 128
+    EPOCHS: 75
     OPTIM:
         NAME: 'SGD'
         LEARNING_RATE: 0.1
@@ -11,7 +11,7 @@ HYPERPARAMETERS:
         WEIGHT_DECAY: 0.0002
         SCHEDULER:
             NAME: 'STEP'
-            EPOCH: 75
+            EPOCH: 60
             LR_DECAY: 0.1
     PRINT_FREQ: 10
 
@@ -19,13 +19,14 @@ DATASET:
     NAME: 'CIFAR10'
     CLASSES: 10
     DIR_PATH: 'datasets/'
+    SHUFFLE: TRUE
     NORMALIZE: FALSE
-    CROP: FALSE
+    CROP: TRUE
     
 ATTACK:
     NAME: 'PGD'
     STEP: 'BOTH'
-    MAX_ITER: 7
+    MAX_ITER: 8
     EPSILON:
         TYPE: 'FIXED'
         VALUE: 8
@@ -39,7 +40,7 @@ ATTACK:
 MODELS:
     # Model we are training
     THREAT_MODEL:
-        NAME: "WideResNet"
+        NAME: 'WideResNet'
         DEPTH: 28
         WIDEN_FACTOR: 10
         DROP_RATE: 0
@@ -47,30 +48,34 @@ MODELS:
         PRETRAINED: FALSE
         CHKPT_PATH: null
         ACTIVATION:
-          NAME: 'ReLU'
+            NAME: 'k-WTA2D'
+            SPARSITY_RATE: 0.2
         LOSS:
-          NAME: 'SCE'
-          CLASSES: 10
-          REDUCTION: 'mean'
+            NAME: 'MMC'
+            CLASSES: 10
+            C_MM: 1
+            REDUCTION: 'none'
 
     # Model used to generate adversarial examples (ATTACK model)
     ADV_MODEL:
-        NAME: "WideResNet"
+        NAME: 'WideResNet'
         DEPTH: 28
         WIDEN_FACTOR: 10
         DROP_RATE: 0
         PARALLEL: TRUE
         PRETRAINED: TRUE
-        CHKPT_PATH: "chkpt/chkpt_scaled/chkpt_plain__model_best.pth.tar"
+        CHKPT_PATH: 'chkpt/base_kwta2_mmc/model_best.pth.tar'
         ACTIVATION:
-          NAME: 'ReLU'
+            NAME: 'k-WTA2D'
+            SPARSITY_RATE: 0.2
         LOSS:
-          NAME: 'SCE'
-          CLASSES: 10
-          REDUCTION: 'mean'
+            NAME: 'MMC'
+            CLASSES: 10
+            C_MM: 1
+            REDUCTION: 'none'
 
 PATHS:
-    SAVE_DIR: 'chkpt/pgd_madry78/'
+    SAVE_DIR: 'chkpt/at_kwta2_mmc_pgd8/'
     SAVE_NAME: 'model_best.pth.tar'
     RESULTS: 'results/'
 

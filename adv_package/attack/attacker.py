@@ -69,6 +69,7 @@ class GradientAttack(Attack):
 
     def __init__(self, model_cfg, att_cfg):
         self.modelWrapper = self.retrieve_model(model_cfg)
+        self.modelWrapper.model.eval()
         self.epsManager = self.setEpsilon(att_cfg.EPSILON)
         self.alphaManager = self.setAlpha(att_cfg.ALPHA)
         self.initManager = self.setShift(att_cfg.INIT)

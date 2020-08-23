@@ -6,7 +6,7 @@ import sys
 
 from ..utils import MetricTracker
 from ..attack.dataset import TORCH_CIFAR10, TORCH_CIFAR100
-from .step_manager import RawStep, AdvStep, MixedStep, RatioStep, RandomStep, AdvHGDStep, MixedHGDStep
+from .step_manager import RawStep, AdvStep, MixedStep, RatioStep, RandomStep, RawHGDStep, AdvHGDStep, MixedHGDStep
 
 
 class ConfigManager(metaclass=ABCMeta):
@@ -21,6 +21,7 @@ class ConfigManager(metaclass=ABCMeta):
         'BOTH': MixedStep,
         'RATIO': RatioStep,
         'RANDOM': RandomStep,
+        'RAW_HGD': RawHGDStep,
         'ADV_HGD': AdvHGDStep,
         'BOTH_HGD': MixedHGDStep
     }
