@@ -1,0 +1,73 @@
+TYPE: 'ATTACK'
+
+HYPERPARAMETERS:
+    BATCH_SIZE: 64
+    PRINT_FREQ: 10
+
+DATASET:
+    NAME: 'CIFAR10'
+    TRAIN: FALSE
+    CLASSES: 10
+    DIR_PATH: 'datasets/'
+    NORMALIZE: FALSE
+    CROP: FALSE
+    
+ATTACK:
+    NAME: "PGD"
+    STEP: 'RAW'
+    MAX_ITER: 1
+    MOMENTUM: 0
+    EPSILON:
+        TYPE: 'FIXED'
+        VALUE: 8
+    ALPHA:
+        TYPE: 'DIVISOR'
+        DIVISOR: 1
+    INIT:
+        TYPE: 'RAW'
+
+
+MODELS:
+    # Model used to generate adversarial examples (ATTACK model)
+    ADV_MODEL:
+        NAME: "WideResNet"
+        DEPTH: 28
+        WIDEN_FACTOR: 10
+        DROP_RATE: 0
+        PARALLEL: TRUE
+        PRETRAINED: TRUE
+        CHKPT_PATH: 'chkpt/base_kwta2_mmc/model_best.pth.tar'
+        ACTIVATION:
+            NAME: 'k-WTA2D'
+            SPARSITY_RATE: 0.2
+        LOSS:
+            NAME: 'MMC'
+            CLASSES: 10
+            C_MM: 1
+            REDUCTION: 'none'
+
+    # Model we are trying to fool
+    THREAT_MODEL:
+        NAME: "WideResNet"
+        DEPTH: 28
+        WIDEN_FACTOR: 10
+        DROP_RATE: 0
+        PARALLEL: TRUE
+        PRETRAINED: TRUE
+        CHKPT_PATH: "chkpt/at_kwta2_mmc_pgd8/model_best.pth.tar"
+        ACTIVATION:
+            NAME: 'k-WTA2D'
+            SPARSITY_RATE: 0.2
+        LOSS:
+            NAME: 'MMC'
+            CLASSES: 10
+            C_MM: 1
+            REDUCTION: 'none'
+
+PATHS:
+    RESULTS: 'results/'
+    
+LOGGER:
+    DIR: ''
+    FILE: 'experiments.txt'
+

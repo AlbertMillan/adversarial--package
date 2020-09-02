@@ -1,0 +1,90 @@
+TYPE: 'ATTACK'
+
+HYPERPARAMETERS:
+    BATCH_SIZE: 64
+    PRINT_FREQ: 10
+
+DATASET:
+    NAME: 'CIFAR10'
+    TRAIN: FALSE
+    CLASSES: 10
+    DIR_PATH: 'datasets/'
+    SHUFFLE: FALSE
+    NORMALIZE: FALSE
+    CROP: FALSE
+    
+ATTACK:
+    NAME: "PGD"
+    STEP: 'ADV_HGD'
+    MAX_ITER: 1
+    MOMENTUM: 0
+    EPSILON:
+        TYPE: 'FIXED'
+        VALUE: 8
+    ALPHA:
+        TYPE: 'DIVISOR'
+        DIVISOR: 1
+    INIT:
+        TYPE: 'RAW'
+
+
+MODELS:
+    # Model used to generate adversarial examples (ATTACK model)
+    ADV_MODEL:
+        NAME: 'HGD'
+        INPUT_WIDTH: 32
+        INPUT_HEIGHT: 32
+        TRAIN: TRUE
+        PARALLEL: TRUE
+        DENOISER_PATH: 'chkpt/denoiser_ifgsm7_mmc/model_best.pth.tar'
+        TARGET:
+            NAME: "WideResNet"
+            DEPTH: 28
+            WIDEN_FACTOR: 10
+            DROP_RATE: 0
+            PARALLEL: TRUE
+            PRETRAINED: TRUE
+            CHKPT_PATH: "chkpt/base_mmc/model_best.pth.tar"
+            ACTIVATION:
+                NAME: 'ReLU'
+            LOSS:
+                NAME: 'MMC'
+                CLASSES: 10
+                C_MM: 1
+                REDUCTION: 'none'
+        ACTIVATION:
+            NAME: 'ReLU'
+
+    # Model we are trying to fool
+    THREAT_MODEL:
+        NAME: 'HGD'
+        INPUT_WIDTH: 32
+        INPUT_HEIGHT: 32
+        TRAIN: TRUE
+        PARALLEL: TRUE
+        DENOISER_PATH: 'chkpt/denoiser_ifgsm7_mmc/model_best.pth.tar'
+        TARGET:
+            NAME: "WideResNet"
+            DEPTH: 28
+            WIDEN_FACTOR: 10
+            DROP_RATE: 0
+            PARALLEL: TRUE
+            PRETRAINED: TRUE
+            CHKPT_PATH: "chkpt/base_mmc/model_best.pth.tar"
+            ACTIVATION:
+                NAME: 'ReLU'
+            LOSS:
+                NAME: 'MMC'
+                CLASSES: 10
+                C_MM: 1
+                REDUCTION: 'none'
+        ACTIVATION:
+            NAME: 'ReLU'
+
+PATHS:
+    RESULTS: 'results/'
+    
+LOGGER:
+    DIR: ''
+    FILE: 'experiments.txt'
+
